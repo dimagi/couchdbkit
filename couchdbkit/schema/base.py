@@ -566,7 +566,7 @@ class QueryMixin(object):
 
     @classmethod
     def view(cls, view_name, wrapper=None, dynamic_properties=None,
-    wrap_doc=True, classes=None, **params):
+    wrap_doc=True, classes=None, include_docs=True, **params):
         """ Get documents associated view a view.
         Results of view are automatically wrapped
         to Document object.
@@ -583,9 +583,15 @@ class QueryMixin(object):
         results are wrapped to current document instance.
         """
         db = cls.get_db()
-        return db.view(view_name,
-            dynamic_properties=dynamic_properties, wrap_doc=wrap_doc,
-            wrapper=wrapper, schema=classes or cls, **params)
+        return db.view(
+            view_name,
+            wrapper=wrapper,
+            dynamic_properties=dynamic_properties,
+            wrap_doc=wrap_doc,
+            schema=classes or cls,
+            include_docs=include_docs,
+            **params
+        )
 
     @classmethod
     def temp_view(cls, design, wrapper=None, dynamic_properties=None,
