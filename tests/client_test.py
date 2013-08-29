@@ -859,6 +859,17 @@ class ClientViewTestCase(unittest.TestCase):
         self.assert_(results[1].__class__ == B)
         self.Server.delete_db('couchdbkit_test')
 
+    def test_document_view(self):
+        db = self.Server.get_or_create_db('couchdbkit_test_document_view')
+        class Foo(Document):
+            _db = db
+
+        foo = Foo()
+        foo.save()
+        Foo.view('_all_docs').all()
+        self.Server.delete_db('couchdbkit_test_document_view')
+
+
 
 if __name__ == '__main__':
     unittest.main()
