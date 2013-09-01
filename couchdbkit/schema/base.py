@@ -43,10 +43,19 @@ def valid_id(value):
 
 class SchemaProperties(jsonobject.JsonObjectMeta):
     def __new__(mcs, name, bases, dct):
-        if isinstance(dct.get('doc_type'), basestring):
-            doc_type = dct.pop('doc_type')
+        if '_doc_type_attr' in dct:
+            doc_type_attr = dct['_doc_type_attr']
+        else:
+            doc_type_attr = (
+                super(SchemaProperties, mcs).__new__(mcs, '', bases, {})
+            )._doc_type_attr
+        if isinstance(dct.get(doc_type_attr), basestring):
+            doc_type = dct.pop(doc_type_attr)
         else:
             doc_type = name
+        dct[doc_type_attr] = jsonobject.StringProperty(
+            default=lambda self: self._doc_type
+        )
         cls = super(SchemaProperties, mcs).__new__(mcs, name, bases, dct)
         cls._doc_type = doc_type
         return cls
@@ -58,10 +67,6 @@ class DocumentSchema(jsonobject.JsonObject):
 
     _validate_required_lazily = True
     _doc_type_attr = 'doc_type'
-
-    @jsonobject.StringProperty
-    def doc_type(self):
-        return self._doc_type
 
     @property
     def _doc(self):
