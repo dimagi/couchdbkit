@@ -78,13 +78,13 @@
     
         <article class="item">
             <header>
-                <h2><a href="/docs/external.html">Build an external handler</a></h2>
+                <h2><a href="/docs/changes.html">Listen to database changes</a></h2>
             </header>
-            	<p>Building an <a href="http://wiki.apache.org/couchdb/ExternalProcesse">external handler</a> with couchdbkit is easy. The only thing you have to do is to create an object inheriting from `couchdbkit.external` module. </p>
+            	<p>couchdbkit 0.6.0 introduced a new <span class="caps">API</span> to listen for CouchDB changes.</p>
 
-	<p>Here is a little snippet that shows you how to handle the <a href="http://wiki.apache.org/couchdb/ExternalProcesse#Example_External_Process">example external process from CouchDB wiki</a> with couchdbkit.</p>
+	<p>The `couchdbkit.changes` modules allows you to listen for changes with a<br />streaming <span class="caps">API</span>.</p>
             <footer>
-                <p><a href="/docs/external.html">Read more ...</a></p>
+                <p><a href="/docs/changes.html">Read more ...</a></p>
             </footer>
         </article>
     
@@ -102,13 +102,25 @@
     
         <article class="item">
             <header>
-                <h2><a href="/docs/storing_docs_and_designdocs_on_filesystem.html">Storing design documents and views on the filesystem</a></h2>
+                <h2><a href="/docs/django-extension.html">The django extension</a></h2>
             </header>
-            	<p>Couchdbkit allows you to manage you design docs and docs on the file system.</p>
+            	<p>There are a lot of people trying to integrate CouchDB in their <a href="http://djangoproject.com">Django</a> application. Most of the implementations are very complicated. So I decided to release the code of couchdbkit extension for Django 1.0x.</p>
 
-	<p>A system will be provided to manage view creation and other things. As some noticed, this system works like <a href="http://github.com/couchapp/couchapp/tree/">couchapp</a>.</p>
+	<p>This extension provides you a threadsafe access and management of documents and views in your django application with some useful tools specific to Django.</p>
             <footer>
-                <p><a href="/docs/storing_docs_and_designdocs_on_filesystem.html">Read more ...</a></p>
+                <p><a href="/docs/django-extension.html">Read more ...</a></p>
+            </footer>
+        </article>
+    
+        <article class="item">
+            <header>
+                <h2><a href="/docs/external.html">Build an external handler</a></h2>
+            </header>
+            	<p>Building an <a href="http://wiki.apache.org/couchdb/ExternalProcesse">external handler</a> with couchdbkit is easy. The only thing you have to do is to create an object inheriting from `couchdbkit.external` module. </p>
+
+	<p>Here is a little snippet that shows you how to handle the <a href="http://wiki.apache.org/couchdb/ExternalProcesse#Example_External_Process">example external process from CouchDB wiki</a> with couchdbkit.</p>
+            <footer>
+                <p><a href="/docs/external.html">Read more ...</a></p>
             </footer>
         </article>
     
@@ -118,7 +130,7 @@
             </header>
             	<p>In the <a href="/docs/django-extension.html">Django extension</a>, I wrote the object `DocumentForm` that allows you to create a Django Form class based on a Document class or instance of a Document. </p>
 
-	<p>But you don&#8217;t need to use Django to have this facility in your web application. If you use <a href="http://pylonshq.com/">Pylons</a> you may already know <a href="http://code.google.com/p/formalchemy/">FormAlchemy</a>. FormAlchemy was originaly developped to map <a href="http://www.sqlalchemy.org/">SQLAlchemy</a> object in a form but it now contains an extension for Couchdbkit too. </p>
+	<p>But you don&#8217;t need to use Django to have this facility in your web application. If you use <a href="http://pylonshq.com/">Pylons</a> you may already know <a href="http://code.google.com/p/formalchemy/">FormAlchemy</a>. FormAlchemy was originaly developped to map <a href="http://www.sqlalchemy.org/">SQLAlchemy</a> object in a form but it now contains an extension for Couchdbkit too.</p>
             <footer>
                 <p><a href="/docs/formalchemy.html">Read more ...</a></p>
             </footer>
@@ -138,13 +150,13 @@
     
         <article class="item">
             <header>
-                <h2><a href="/docs/django-extension.html">The django extension</a></h2>
+                <h2><a href="/docs/storing_docs_and_designdocs_on_filesystem.html">Storing design documents and views on the filesystem</a></h2>
             </header>
-            	<p>There are a lot of people trying to integrate CouchDB in their <a href="http://djangoproject.com">Django</a> application. Most of the implementations are very complicated. So I decided to release the code of couchdbkit extension for Django 1.0x.</p>
+            	<p>Couchdbkit allows you to manage you design docs and docs on the file system.</p>
 
-	<p>This extension provides you a threadsafe access and management of documents and views in your django application with some useful tools specific to Django.</p>
+	<p>A system will be provided to manage view creation and other things. As some noticed, this system works like <a href="http://github.com/couchapp/couchapp/tree/">couchapp</a>.</p>
             <footer>
-                <p><a href="/docs/django-extension.html">Read more ...</a></p>
+                <p><a href="/docs/storing_docs_and_designdocs_on_filesystem.html">Read more ...</a></p>
             </footer>
         </article>
     
@@ -152,7 +164,7 @@
 
         
         <footer id="bottom">
-            <p class="copyright">2008-20011 &copy; <a href="http://benoitc.org">Benoît Chesneau</a> - Some rights reserved.</p>
+            <p class="copyright">2008-2012 &copy; <a href="http://benoitc.org">Benoît Chesneau</a> - Some rights reserved.</p>
             <div id="cc"><a rel="license" href="http://creativecommons.org/licenses/by/2.0/fr/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by/2.0/fr/80x15.png" /></a> This <span xmlns:dc="http://purl.org/dc/elements/1.1/" href="http://purl.org/dc/dcmitype/InteractiveResource" rel="dc:type">website</span> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/2.0/fr/">Creative Commons Attribution 2.0 France License</a>.</div>
             <p>Hosted on <a href="http://github.com/">GitHub</a></p>
         </footer>

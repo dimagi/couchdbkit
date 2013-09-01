@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -
 #
-# This file is part of couchdbkit released under the MIT license. 
+# This file is part of couchdbkit released under the MIT license.
 # See the NOTICE for more information.
 
 """ module that provides a Document object that allows you
@@ -12,6 +12,12 @@ import jsonobject
 from jsonobject.exceptions import DeleteNotAllowed
 from couchdbkit.utils import ProxyDict
 from ..exceptions import ResourceNotFound, ReservedWordError
+from . import properties as p
+from .properties import value_to_python, \
+convert_property, MAP_TYPES_PROPERTIES, ALLOWED_PROPERTY_TYPES, \
+LazyDict, LazyList
+from ..exceptions import DuplicatePropertyError, ResourceNotFound, \
+ReservedWordError
 
 
 __all__ = ['ReservedWordError', 'ALLOWED_PROPERTY_TYPES', 'DocumentSchema',
@@ -21,6 +27,7 @@ __all__ = ['ReservedWordError', 'ALLOWED_PROPERTY_TYPES', 'DocumentSchema',
 _RESERVED_WORDS = ['_id', '_rev', '$schema']
 
 _NODOC_WORDS = ['doc_type']
+
 
 def check_reserved_words(attr_name):
     if attr_name in _RESERVED_WORDS:
@@ -50,6 +57,7 @@ class DocumentSchema(jsonobject.JsonObject):
     __metaclass__ = SchemaProperties
 
     _validate_required_lazily = True
+    _doc_type_attr = 'doc_type'
 
     @jsonobject.StringProperty
     def doc_type(self):
@@ -150,7 +158,7 @@ class DocumentBase(DocumentSchema):
     def get(cls, docid, rev=None, db=None, dynamic_properties=True):
         """ get document with `docid`
         """
-        if not db:
+        if db is None:
             db = cls.get_db()
         cls._allow_dynamic_properties = dynamic_properties
         return db.get(docid, rev=rev, wrapper=cls.wrap)
@@ -159,7 +167,7 @@ class DocumentBase(DocumentSchema):
     def get_or_create(cls, docid=None, db=None, dynamic_properties=True, **params):
         """ get  or create document with `docid` """
 
-        if db:
+        if db is not None:
             cls.set_db(db)
         cls._allow_dynamic_properties = dynamic_properties
         db = cls.get_db()
@@ -215,7 +223,7 @@ class AttachmentMixin(object):
 
         @return: bool, True if everything was ok.
         """
-        db = self.get_db() 
+        db = self.get_db()
         return db.put_attachment(self._doc, content, name=name,
             content_type=content_type, content_length=content_length)
 
@@ -252,57 +260,7 @@ class QueryMixin(object):
     """ Mixin that add query methods """
 
     @classmethod
-    def __view(cl, view_type=None, data=None, wrapper=None,
-    dynamic_properties=True, wrap_doc=True, classes=None, **params):
-        """
-        The default wrapper can distinguish between multiple Document
-        classes and wrap the result accordingly. The known classes are
-        passed either as classes={<doc_type>: <Document-class>, ...} or
-        classes=[<Document-class1>, <Document-class2>, ...]
-        """
-
-        def default_wrapper(row):
-            data = row.get('value')
-            docid = row.get('id')
-            doc = row.get('doc')
-            if doc is not None and wrap_doc:
-                cls = classes.get(doc.get('doc_type')) if classes else cl
-                cls._allow_dynamic_properties = dynamic_properties
-                return cls.wrap(doc)
-
-            elif not data or data is None:
-                return row
-            elif not isinstance(data, dict) or not docid:
-                return row
-            else:
-                cls = classes.get(data.get('doc_type')) if classes else cl
-                data['_id'] = docid
-                if 'rev' in data:
-                    data['_rev'] = data.pop('rev')
-                cls._allow_dynamic_properties = dynamic_properties
-                return cls.wrap(data)
-
-        if isinstance(classes, list):
-            classes = dict([(c._doc_type, c) for c in classes])
-
-        if wrapper is None:
-            wrapper = default_wrapper
-
-        if not wrapper:
-            wrapper = None
-        elif not callable(wrapper):
-            raise TypeError("wrapper is not a callable")
-
-        db = cl.get_db()
-        if view_type == 'view':
-            return db.view(data, wrapper=wrapper, **params)
-        elif view_type == 'temp_view':
-            return db.temp_view(data, wrapper=wrapper, **params)
-        else:
-            raise RuntimeError("bad view_type : %s" % view_type )
-
-    @classmethod
-    def view(cls, view_name, wrapper=None, dynamic_properties=True,
+    def view(cls, view_name, wrapper=None, dynamic_properties=None,
     wrap_doc=True, classes=None, **params):
         """ Get documents associated view a view.
         Results of view are automatically wrapped
@@ -319,12 +277,17 @@ class QueryMixin(object):
         @return: :class:`simplecouchdb.core.ViewResults` instance. All
         results are wrapped to current document instance.
         """
-        return cls.__view(view_type="view", data=view_name, wrapper=wrapper,
+        db = cls.get_db()
+
+        if not classes and not wrapper:
+            classes = cls
+
+        return db.view(view_name,
             dynamic_properties=dynamic_properties, wrap_doc=wrap_doc,
-            classes=classes, **params)
+            wrapper=wrapper, schema=classes, **params)
 
     @classmethod
-    def temp_view(cls, design, wrapper=None, dynamic_properties=True,
+    def temp_view(cls, design, wrapper=None, dynamic_properties=None,
     wrap_doc=True, classes=None, **params):
         """ Slow view. Like in view method,
         results are automatically wrapped to
@@ -340,9 +303,10 @@ class QueryMixin(object):
         @return: Like view, return a :class:`simplecouchdb.core.ViewResults`
         instance. All results are wrapped to current document instance.
         """
-        return cls.__view(view_type="temp_view", data=design, wrapper=wrapper,
+        db = cls.get_db()
+        return db.temp_view(design,
             dynamic_properties=dynamic_properties, wrap_doc=wrap_doc,
-            classes=classes, **params)
+            wrapper=wrapper, schema=classes or cls, **params)
 
 class Document(DocumentBase, QueryMixin, AttachmentMixin):
     """

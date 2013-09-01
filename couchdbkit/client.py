@@ -42,6 +42,8 @@ ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound
 from . import resource
 from .utils import validate_dbname
 
+from .schema.util import maybe_schema_wrapper
+
 
 DEFAULT_UUID_BATCH_COUNT = 1000
 
@@ -246,8 +248,8 @@ class Database(object):
         @param server: Server instance
 
         """
-        self.uri = uri
-        self.server_uri, self.dbname = uri.rsplit("/", 1)
+        self.uri = uri.rstrip('/')
+        self.server_uri, self.dbname = self.uri.rsplit("/", 1)
 
         if server is not None:
             if not hasattr(server, 'next_uuid'):
@@ -264,7 +266,6 @@ class Database(object):
             except ResourceNotFound:
                 self.server.res.put('/%s/' % self.dbname, **params).json_body
 
-
         self.res = server.res(self.dbname)
 
     def __repr__(self):
@@ -278,6 +279,13 @@ class Database(object):
         """
         return self.res.get().json_body
 
+    def set_security(self, secobj):
+        """ set database securrity object """
+        return self.res.put("/_security", payload=secobj).json_body
+
+    def get_security(self):
+        """ get database secuirity object """
+        return self.res.get("/_security").json_body
 
     def compact(self, dname=None):
         """ compact database
@@ -299,20 +307,40 @@ class Database(object):
     def flush(self):
         """ Remove all docs from a database
         except design docs."""
+
         # save ddocs
         all_ddocs = self.all_docs(startkey="_design",
                             endkey="_design/"+u"\u9999",
                             include_docs=True)
         ddocs = []
         for ddoc in all_ddocs:
-            ddoc['doc'].pop('_rev')
-            ddocs.append(ddoc['doc'])
+            doc = ddoc['doc']
+            old_atts = doc.get('_attachments', {})
+            atts = {}
+            for name, info in old_atts.items():
+                att = {}
+                att['content_type'] = info['content_type']
+                att['data'] = self.fetch_attachment(ddoc['doc'], name)
+                atts[name] = att
+
+            # create a fresh doc
+            doc.pop('_rev')
+            doc['_attachments'] = resource.encode_attachments(atts)
+
+            ddocs.append(doc)
 
         # delete db
         self.server.delete_db(self.dbname)
 
         # we let a chance to the system to sync
-        time.sleep(0.2)
+        times = 0
+        while times < 10:
+            try:
+                self.server.res.head('/%s/' % self.dbname)
+            except ResourceNotFound:
+                break
+            time.sleep(0.2)
+            times += 1
 
         # recreate db + ddocs
         self.server.create_db(self.dbname)
@@ -661,6 +689,16 @@ class Database(object):
 
         return { 'ok': False }
 
+    def raw_view(self, view_path, params):
+        if 'keys' in params:
+            keys = params.pop('keys')
+            return self.res.post(view_path, payload={ 'keys': keys }, **params)
+        else:
+            return self.res.get(view_path, **params)
+
+    def raw_temp_view(db, design, params):
+        return db.res.post('_temp_view', payload=design,
+               headers={"Content-Type": "application/json"}, **params)
 
     def view(self, view_name, schema=None, wrapper=None, **params):
         """ get view results from database. viewname is generally
@@ -679,35 +717,6 @@ class Database(object):
         @param params: params of the view
 
         """
-        def get_multi_wrapper(classes, wrap_doc=True,
-                dynamic_properties=True):
-            def wrapper(row):
-                data = row.get('value')
-                docid = row.get('id')
-                doc = row.get('doc')
-                if doc is not None and wrap_doc:
-                    try:
-                        cls = classes[doc.get('doc_type')]
-                        cls._allow_dynamic_properties = dynamic_properties
-                        return cls.wrap(doc)
-                    except KeyError:
-                        return row
-                elif not data or data is None:
-                    return row
-                elif not isinstance(data, dict) or not docid:
-                    return row
-                else:
-                    try:
-                        cls = classes[data.get('doc_type')]
-                        data['_id'] = docid
-                        if 'rev' in data:
-                            data['_rev'] = data.pop('rev')
-                        cls._allow_dynamic_properties = dynamic_properties
-                        return cls.wrap(data)
-                    except KeyError:
-                        return row
-
-            return wrapper
 
         if view_name.startswith('/'):
             view_name = view_name[1:]
@@ -721,46 +730,28 @@ class Database(object):
             vname = '/'.join(view_name)
             view_path = '_design/%s/_view/%s' % (dname, vname)
 
-        if schema is not None:
-            wrap_doc = params.get('wrap_doc', True)
-            dynamic_properties = params.get('dynamic_properties', True)
-
-            if hasattr(schema, "wrap"):
-                if hasattr(schema, '_doc_type'):
-                    schema = {schema._doc_type: schema}
-                    wrapper = get_multi_wrapper(schema, wrap_doc=wrap_doc,
-                            dynamic_properties=dynamic_properties)
-                else:
-                    wrapper = schema.wrap
-            else:
-                if isinstance(schema, list):
-                    schema = dict([(s._doc_type, s) for s in schema])
-
-                wrapper = get_multi_wrapper(schema, wrap_doc=wrap_doc,
-                    dynamic_properties=dynamic_properties)
-
-        return View(self, view_path, wrapper=wrapper)(**params)
+        return ViewResults(self.raw_view, view_path, wrapper, schema, params)
 
     def temp_view(self, design, schema=None, wrapper=None, **params):
         """ get adhoc view results. Like view it reeturn a ViewResult object."""
-        if schema is not None:
-            if not hasattr(schema, 'wrap'):
-                raise AttributeError("no 'wrap' method found in obj %s)" % str(schema))
-            wrapper = schema.wrap
-        return TempView(self, design, wrapper=wrapper)(**params)
+        return ViewResults(self.raw_temp_view, design, wrapper, schema, params)
 
-    def search( self, view_name, handler='_fti/_design', wrapper=None, **params):
+    def search( self, view_name, handler='_fti/_design', wrapper=None, schema=None, **params):
         """ Search. Return results from search. Use couchdb-lucene
         with its default settings by default."""
-        return View(self, "/%s/%s" % (handler, view_name), wrapper=wrapper)(**params)
+        return ViewResults(self.raw_view,
+                    "/%s/%s" % (handler, view_name),
+                    wrapper=wrapper, schema=schema, params=params)
 
     def documents(self, schema=None, wrapper=None, **params):
         """ return a ViewResults objects containing all documents.
         This is a shorthand to view function.
         """
-        return View(self, '_all_docs', schema=schema,
-                wrapper=wrapper)(**params)
+        return ViewResults(self.raw_view, '_all_docs',
+                wrapper=wrapper, schema=schema, params=params)
     iterdocuments = documents
+
+
 
     def put_attachment(self, doc, content, name=None, content_type=None,
             content_length=None, headers=None):
@@ -908,7 +899,7 @@ class ViewResults(object):
     Object to retrieve view results.
     """
 
-    def __init__(self, view, **params):
+    def __init__(self, fetch, arg, wrapper, schema, params):
         """
         Constructor of ViewResults object
 
@@ -916,8 +907,33 @@ class ViewResults(object):
         @param params: params to apply when fetching view.
 
         """
-        self.view = view
-        self.params = params
+        assert not (wrapper and schema)
+        wrap_doc = params.get('wrap_doc', schema is not None)
+        if schema:
+            schema = maybe_schema_wrapper(None, schema, params)
+            def row_wrapper(row):
+                data = row.get('value')
+                docid = row.get('id')
+                doc = row.get('doc')
+                if doc is not None and wrap_doc:
+                    return schema(doc)
+                elif not data or data is None:
+                    return row
+                elif not isinstance(data, dict) or not docid:
+                    return row
+                else:
+                    data['_id'] = docid
+                    if 'rev' in data:
+                        data['_rev'] = data.pop('rev')
+                    return schema(data)
+        else:
+            def row_wrapper(row):
+                return row
+
+        self._fetch = fetch
+        self._arg = arg
+        self.wrapper = wrapper or row_wrapper
+        self.params = params or {}
         self._result_cache = None
         self._total_rows = None
         self._offset = 0
@@ -926,12 +942,9 @@ class ViewResults(object):
     def iterator(self):
         self._fetch_if_needed()
         rows = self._result_cache.get('rows', [])
-        wrapper = self.view._wrapper
+        wrapper = self.wrapper
         for row in rows:
-            if  wrapper is not None:
-                yield self.view._wrapper(row)
-            else:
-                yield row
+            yield wrapper(row)
 
     def first(self):
         """
@@ -985,7 +998,10 @@ class ViewResults(object):
                 pass
         self._dynamic_keys = []
 
-        self._result_cache = self.view._exec(**self.params).json_body
+        self._result_cache = self.fetch_raw().json_body
+        assert isinstance(self._result_cache, dict), 'received an invalid ' \
+            'response of type %s: %s' % \
+            (type(self._result_cache), repr(self._result_cache))
         self._total_rows = self._result_cache.get('total_rows')
         self._offset = self._result_cache.get('offset', 0)
 
@@ -999,7 +1015,7 @@ class ViewResults(object):
 
     def fetch_raw(self):
         """ retrive the raw result """
-        return self.view._exec(**self.params)
+        return self._fetch(self._arg, self.params)
 
     def _fetch_if_needed(self):
         if not self._result_cache:
@@ -1032,7 +1048,15 @@ class ViewResults(object):
         else:
             params['key'] = key
 
-        return ViewResults(self.view, **params)
+        return ViewResults(self._fetch, self._arg, wrapper=self.wrapper, params=params, schema=None)
+
+    def __call__(self, **newparams):
+        return ViewResults(
+            self._fetch, self._arg,
+            wrapper=self.wrapper,
+            params=dict(self.params, **newparams),
+            schema=None,
+        )
 
     def __iter__(self):
         return self.iterator()
@@ -1044,44 +1068,4 @@ class ViewResults(object):
         return bool(len(self))
 
 
-class ViewInterface(object):
-    """ Generic object interface used by View and TempView objects. """
 
-    def __init__(self, db, wrapper=None):
-        self._db = db
-        self._wrapper = wrapper
-
-    def __call__(self, **params):
-        return ViewResults(self, **params)
-
-    def __iter__(self):
-        return self()
-
-    def _exec(self, **params):
-        raise NotImplementedError
-
-class View(ViewInterface):
-    """ Object used to wrap a view and return ViewResults.
-    Generally called via the `view` method in a `Database` instance. """
-
-    def __init__(self, db, view_path, wrapper=None):
-        ViewInterface.__init__(self, db, wrapper=wrapper)
-        self.view_path = view_path
-
-    def _exec(self, **params):
-        if 'keys' in params:
-            keys = params.pop('keys')
-            return self._db.res.post(self.view_path, payload={ 'keys': keys }, **params)
-        else:
-            return self._db.res.get(self.view_path, **params)
-
-class TempView(ViewInterface):
-    """ Object used to wrap a temporary and return ViewResults. """
-    def __init__(self, db, design, wrapper=None):
-        ViewInterface.__init__(self, db, wrapper=wrapper)
-        self.design = design
-        self._wrapper = wrapper
-
-    def _exec(self, **params):
-        return self._db.res.post('_temp_view', payload=self.design,
-                **params)

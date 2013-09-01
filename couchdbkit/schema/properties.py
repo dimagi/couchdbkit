@@ -12,7 +12,18 @@ from jsonobject.convert import (
     value_to_property
 )
 
+try:
+    from collections import MutableSet, Iterable
+
+    def is_iterable(c):
+        return isinstance(c, Iterable)
+
+    support_setproperty = True
+except ImportError:
+    support_setproperty = False
+
 StringListProperty = functools.partial(ListProperty, unicode)
+StringDictProperty = functools.partial(DictProperty, unicode)
 
 
 class Property(DefaultProperty):
