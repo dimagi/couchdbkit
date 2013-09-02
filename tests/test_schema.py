@@ -1140,7 +1140,6 @@ class PropertyTestCase(unittest.TestCase):
                     {'doc_type': 'A', 's': unicode(a2.s)}]
         })
 
-
     def testSchemaListPropertyIndex(self):
         """SchemaListProperty index method
         """
@@ -1164,8 +1163,10 @@ class PropertyTestCase(unittest.TestCase):
         self.assertEqual(b.slm.index(a1, 1, -2), 2)
         with self.assertRaises(ValueError) as cm:
             b.slm.index(a3)
-        self.assertEqual(str(cm.exception), '{0} is not in list'.format(a3))
-
+        self.assertIn(str(cm.exception), (
+            '{0!r} is not in list'.format(a3),
+            'list.index(x): x not in list'
+        ))
 
     def testSchemaListPropertyInsert(self):
         """SchemaListProperty insert method
@@ -1256,8 +1257,10 @@ class PropertyTestCase(unittest.TestCase):
         })
         with self.assertRaises(ValueError) as cm:
             b.slm.remove(a1)
-        self.assertEqual(str(cm.exception), '{0} is not in list'.format(a1))
-
+        self.assertIn(str(cm.exception), (
+            '{0!r} is not in list'.format(a1),
+            'list.index(x): x not in list'
+        ))
 
     def testSchemaListPropertyReverse(self):
         """SchemaListProperty reverse method
