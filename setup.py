@@ -18,7 +18,7 @@ version = load_source("version", os.path.join("couchdbkit",
 
 
 setup(
-    name = 'couchdbkit',
+    name = 'jsonobject-couchdbkit',
     version = version.__version__,
 
     description = 'Python couchdb kit',
