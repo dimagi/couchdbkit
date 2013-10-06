@@ -55,9 +55,8 @@ setup(
         'restkit>=4.2.2',
         'jsonobject>=0.2.0',
     ],
-    provides=[
-        'couchdbkit',
-    ],
+    provides=['couchdbkit'],
+    obsoletes=['couchdbkit'],
     entry_points="""
     [couchdbkit.consumers]
     sync=couchdbkit.consumer.sync:SyncConsumer
