@@ -961,7 +961,7 @@ class PropertyTestCase(unittest.TestCase):
             'sm': {'doc_type': 'A', 's': u'foo'}})
 
         b.created = datetime(2009, 2, 6, 18, 58, 20, 905556)
-        self.assert_(b._doc == {'created': '2009-02-06T18:58:20Z',
+        self.assert_(b._doc == {'created': '2009-02-06T18:58:20.905556Z',
             'doc_type': 'B',
             's1': None,
             's2': None,
@@ -970,14 +970,14 @@ class PropertyTestCase(unittest.TestCase):
         self.assert_(isinstance(b.created, datetime) == True)
 
         a.created = datetime(2009, 2, 6, 20, 58, 20, 905556)
-        self.assert_(a._doc ==  {'created': '2009-02-06T20:58:20Z',
+        self.assert_(a._doc ==  {'created': '2009-02-06T20:58:20.905556Z',
             'doc_type': 'A', 's': u'foo'})
 
-        self.assert_(b._doc == {'created': '2009-02-06T18:58:20Z',
+        self.assert_(b._doc == {'created': '2009-02-06T18:58:20.905556Z',
             'doc_type': 'B',
             's1': None,
             's2': None,
-            'sm': {'created': '2009-02-06T20:58:20Z', 'doc_type': 'A',
+            'sm': {'created': '2009-02-06T20:58:20.905556Z', 'doc_type': 'A',
             's': u'foo'}})
 
 
@@ -1375,14 +1375,14 @@ class PropertyTestCase(unittest.TestCase):
         d = datetime(2009, 4, 13, 22, 56, 10, 967388)
         a.l.append(d)
         self.assert_(len(a.l) == 1)
-        self.assert_(a.l[0] == datetime(2009, 4, 13, 22, 56, 10))
-        self.assert_(a._doc == {'doc_type': 'A', 'l': ['2009-04-13T22:56:10Z']})
+        self.assert_(a.l[0] == datetime(2009, 4, 13, 22, 56, 10, 967388))
+        self.assert_(a._doc == {'doc_type': 'A', 'l': ['2009-04-13T22:56:10.967388Z']})
         a.save()
 
         b = A.get(a._id)
         self.assert_(len(b.l) == 1)
-        self.assert_(b.l[0] == datetime(2009, 4, 13, 22, 56, 10))
-        self.assert_(b._doc['l'] == ['2009-04-13T22:56:10Z'])
+        self.assert_(b.l[0] == datetime(2009, 4, 13, 22, 56, 10, 967388))
+        self.assert_(b._doc['l'] == ['2009-04-13T22:56:10.967388Z'])
 
     def testListPropertyNotEmpty(self):
         from datetime import datetime
@@ -1401,8 +1401,8 @@ class PropertyTestCase(unittest.TestCase):
         d = datetime(2009, 4, 13, 22, 56, 10, 967388)
         a.l.append(d)
         self.assert_(len(a.l) == 1)
-        self.assert_(a.l[0] == datetime(2009, 4, 13, 22, 56, 10))
-        self.assert_(a._doc == {'doc_type': 'A', 'l': ['2009-04-13T22:56:10Z']})
+        self.assert_(a.l[0] == datetime(2009, 4, 13, 22, 56, 10, 967388))
+        self.assert_(a._doc == {'doc_type': 'A', 'l': ['2009-04-13T22:56:10.967388Z']})
         a.validate()
 
         class A2(Document):
@@ -1559,18 +1559,18 @@ class PropertyTestCase(unittest.TestCase):
 
         a = A()
         a.d['test'] = { 'a': datetime(2009, 5, 10, 21, 19, 21, 127380) }
-        self.assert_(a.d == { 'test': {'a': datetime(2009, 5, 10, 21, 19, 21)}})
-        self.assert_(a._doc == {'d': {'test': {'a': '2009-05-10T21:19:21Z'}}, 'doc_type': 'A'} )
+        self.assert_(a.d == { 'test': {'a': datetime(2009, 5, 10, 21, 19, 21, 127380)}})
+        self.assert_(a._doc == {'d': {'test': {'a': '2009-05-10T21:19:21.127380Z'}}, 'doc_type': 'A'} )
 
         a.d['test']['b'] = "essai"
-        self.assert_(a._doc == {'d': {'test': {'a': '2009-05-10T21:19:21Z', 'b': 'essai'}}, 'doc_type': 'A'})
+        self.assert_(a._doc == {'d': {'test': {'a': '2009-05-10T21:19:21.127380Z', 'b': 'essai'}}, 'doc_type': 'A'})
 
         a.d['essai'] = "test"
         self.assert_(a.d == {'essai': 'test',
-         'test': {'a': datetime(2009, 5, 10, 21, 19, 21),
+         'test': {'a': datetime(2009, 5, 10, 21, 19, 21, 127380),
                   'b': 'essai'}}
         )
-        self.assert_(a._doc == {'d': {'essai': 'test', 'test': {'a': '2009-05-10T21:19:21Z', 'b': 'essai'}},
+        self.assert_(a._doc == {'d': {'essai': 'test', 'test': {'a': '2009-05-10T21:19:21.127380Z', 'b': 'essai'}},
          'doc_type': 'A'})
 
         del a.d['test']['a']
@@ -1618,8 +1618,8 @@ class PropertyTestCase(unittest.TestCase):
 
         d = datetime(2009, 4, 13, 22, 56, 10, 967388)
         a.d['date'] = d
-        self.assert_(a.d['date'] == datetime(2009, 4, 13, 22, 56, 10))
-        self.assert_(a._doc == {'doc_type': 'A', 'd': { 'date': '2009-04-13T22:56:10Z' }})
+        self.assert_(a.d['date'] == datetime(2009, 4, 13, 22, 56, 10, 967388))
+        self.assert_(a._doc == {'doc_type': 'A', 'd': { 'date': '2009-04-13T22:56:10.967388Z' }})
         a.save()
 
         class A2(Document):
@@ -1637,18 +1637,18 @@ class PropertyTestCase(unittest.TestCase):
         a.d = {}
 
         a.d['test'] = { 'a': datetime(2009, 5, 10, 21, 19, 21, 127380) }
-        self.assert_(a.d == {'test': {'a': datetime(2009, 5, 10, 21, 19, 21)}})
-        self.assert_(a._doc == {'d': {'test': {'a': '2009-05-10T21:19:21Z'}}, 'doc_type': 'A'} )
+        self.assert_(a.d == {'test': {'a': datetime(2009, 5, 10, 21, 19, 21, 127380)}})
+        self.assert_(a._doc == {'d': {'test': {'a': '2009-05-10T21:19:21.127380Z'}}, 'doc_type': 'A'} )
 
         a.d['test']['b'] = "essai"
-        self.assert_(a._doc == {'d': {'test': {'a': '2009-05-10T21:19:21Z', 'b': 'essai'}}, 'doc_type': 'A'})
+        self.assert_(a._doc == {'d': {'test': {'a': '2009-05-10T21:19:21.127380Z', 'b': 'essai'}}, 'doc_type': 'A'})
 
         a.d['essai'] = "test"
         self.assert_(a.d == {'essai': 'test',
-         'test': {'a': datetime(2009, 5, 10, 21, 19, 21),
+         'test': {'a': datetime(2009, 5, 10, 21, 19, 21, 127380),
                   'b': 'essai'}}
         )
-        self.assert_(a._doc == {'d': {'essai': 'test', 'test': {'a': '2009-05-10T21:19:21Z', 'b': 'essai'}},
+        self.assert_(a._doc == {'d': {'essai': 'test', 'test': {'a': '2009-05-10T21:19:21.127380Z', 'b': 'essai'}},
          'doc_type': 'A'})
 
         del a.d['test']['a']
@@ -1658,10 +1658,10 @@ class PropertyTestCase(unittest.TestCase):
         a.d['test']['essai'] = { "a": datetime(2009, 5, 10, 21, 21, 11, 425782) }
         self.assert_(a.d == {'essai': 'test',
          'test': {'b': 'essai',
-                  'essai': {'a': datetime(2009, 5, 10, 21, 21, 11)}}}
+                  'essai': {'a': datetime(2009, 5, 10, 21, 21, 11, 425782)}}}
         )
         self.assert_(a._doc == {'d': {'essai': 'test',
-               'test': {'b': 'essai', 'essai': {'a': '2009-05-10T21:21:11Z'}}},
+               'test': {'b': 'essai', 'essai': {'a': '2009-05-10T21:21:11.425782Z'}}},
          'doc_type': 'A'}
         )
 
@@ -1729,32 +1729,32 @@ class PropertyTestCase(unittest.TestCase):
         a.l.append(1)
         a.l.append(datetime(2009, 5, 12, 13, 35, 9, 425701))
         a.l.append({ 's': "test"})
-        self.assert_(a.l == [1, datetime(2009, 5, 12, 13, 35, 9), {'s': 'test'}])
-        self.assert_(a._doc == {'doc_type': 'A', 'l': [1, '2009-05-12T13:35:09Z', {'s': 'test'}]}
+        self.assert_(a.l == [1, datetime(2009, 5, 12, 13, 35, 9, 425701), {'s': 'test'}])
+        self.assert_(a._doc == {'doc_type': 'A', 'l': [1, '2009-05-12T13:35:09.425701Z', {'s': 'test'}]}
         )
         a.l[2]['date'] = datetime(2009, 5, 12, 13, 35, 9, 425701)
-        self.assert_(a._doc == {'doc_type': 'A',
+        self.assertEqual(a._doc, {'doc_type': 'A',
          'l': [1,
-               '2009-05-12T13:35:09Z',
-               {'date': '2009-05-12T13:35:09Z', 's': 'test'}]}
+               '2009-05-12T13:35:09.425701Z',
+               {'date': '2009-05-12T13:35:09.425701Z', 's': 'test'}]}
         )
         a.save()
 
         a1 = A.get(a._id)
         self.assert_(a1.l == [1,
-         datetime(2009, 5, 12, 13, 35, 9),
-         {u'date': datetime(2009, 5, 12, 13, 35, 9), u's': u'test'}]
+         datetime(2009, 5, 12, 13, 35, 9, 425701),
+         {u'date': datetime(2009, 5, 12, 13, 35, 9, 425701), u's': u'test'}]
         )
 
         a.l[2]['s'] = 'test edited'
         self.assert_(a.l == [1,
-         datetime(2009, 5, 12, 13, 35, 9),
-         {'date': datetime(2009, 5, 12, 13, 35, 9),
+         datetime(2009, 5, 12, 13, 35, 9, 425701),
+         {'date': datetime(2009, 5, 12, 13, 35, 9, 425701),
           's': 'test edited'}]
         )
         self.assert_(a._doc['l'] == [1,
-         '2009-05-12T13:35:09Z',
-         {'date': '2009-05-12T13:35:09Z', 's': 'test edited'}]
+         '2009-05-12T13:35:09.425701Z',
+         {'date': '2009-05-12T13:35:09.425701Z', 's': 'test edited'}]
         )
 
 
