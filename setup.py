@@ -53,7 +53,7 @@ setup(
 
     install_requires = [
         'restkit>=4.2.2',
-        'jsonobject>=0.2.0',
+        'jsonobject>=0.4.0',
     ],
     provides=['couchdbkit'],
     obsoletes=['couchdbkit'],
