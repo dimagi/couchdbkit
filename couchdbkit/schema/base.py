@@ -13,14 +13,14 @@ from jsonobject.exceptions import DeleteNotAllowed
 from couchdbkit.utils import ProxyDict
 from ..exceptions import ResourceNotFound, ReservedWordError
 from . import properties as p
-from .properties import value_to_python, \
-convert_property, MAP_TYPES_PROPERTIES, ALLOWED_PROPERTY_TYPES, \
+from .properties import \
+convert_property, \
 LazyDict, LazyList
 from ..exceptions import DuplicatePropertyError, ResourceNotFound, \
 ReservedWordError
 
 
-__all__ = ['ReservedWordError', 'ALLOWED_PROPERTY_TYPES', 'DocumentSchema',
+__all__ = ['ReservedWordError', 'DocumentSchema',
         'SchemaProperties', 'DocumentBase', 'QueryMixin', 'AttachmentMixin',
         'Document', 'StaticDocument', 'valid_id']
 

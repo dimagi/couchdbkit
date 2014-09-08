@@ -5,12 +5,6 @@
 import functools
 from jsonobject.properties import *
 from jsonobject.base import DefaultProperty
-from jsonobject.convert import (
-    ALLOWED_PROPERTY_TYPES,
-    MAP_TYPES_PROPERTIES,
-    value_to_python,
-    value_to_property
-)
 
 try:
     from collections import MutableSet, Iterable
