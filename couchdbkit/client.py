@@ -426,6 +426,27 @@ class Database(object):
 
         return self.res.get(show_path, **params).json_body
 
+    def update(self, update_name, doc_id=None, **params):
+        """ Execute update function on the server and return the response.
+        If the response is json it will be deserialized, otherwise the string
+        will be returned.
+
+        Args:
+            @param update_name: should be 'designname/updatename'
+            @param doc_id: id of the document to pass into the update function
+            @param params: params of the update
+        """
+        update_name = update_name.split('/')
+        dname = update_name.pop(0)
+        uname = '/'.join(update_name)
+
+        if doc_id is None:
+            update_path = '_design/%s/_update/%s' % (dname, uname)
+            return self.res.post(update_path, **params).json_body
+        else:
+            update_path = '_design/%s/_update/%s/%s' % (dname, uname, doc_id)
+            return self.res.put(update_path, **params).json_body
+
     def all_docs(self, by_seq=False, **params):
         """Get all documents from a database
 
@@ -519,7 +540,7 @@ class Database(object):
             doc.update(doc1)
         return res
 
-    def save_docs(self, docs, use_uuids=True, all_or_nothing=False,
+    def save_docs(self, docs, use_uuids=True, all_or_nothing=False, new_edits=None,
             **params):
         """ bulk save. Modify Multiple Documents With a Single Request
 
@@ -528,6 +549,9 @@ class Database(object):
         @param all_or_nothing: In the case of a power failure, when the database
         restarts either all the changes will have been saved or none of them.
         However, it does not do conflict checking, so the documents will
+        @param new_edits: When False, this saves existing revisions instead of
+        creating new ones. Used in the replication Algorithm. Each document
+        should have a _revisions property that lists its revision history.
 
         .. seealso:: `HTTP Bulk Document API <http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API>`
 
@@ -558,6 +582,8 @@ class Database(object):
         payload = { "docs": docs1 }
         if all_or_nothing:
             payload["all_or_nothing"] = True
+        if new_edits is not None:
+            payload["new_edits"] = new_edits
 
         # update docs
         results = self.res.post('/_bulk_docs',
