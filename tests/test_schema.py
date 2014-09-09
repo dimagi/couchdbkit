@@ -44,7 +44,7 @@ class DocumentTestCase(unittest.TestCase):
         try:
             doc.bar="bla"
         except AttributeError, e:
-            self.assert_(str(e) == "bar is not defined in schema (not a valid property)")
+            self.assertEqual(str(e), "'bar' is not defined in schema (not a valid property)")
         doc.save()
         self.assert_(not hasattr(doc, "bar"))
         assert doc._doc['foo'] == "test"
@@ -59,7 +59,7 @@ class DocumentTestCase(unittest.TestCase):
         try:
             doc.bar="bla"
         except AttributeError, e:
-            self.assert_(str(e) == "bar is not defined in schema (not a valid property)")
+            self.assertEqual(str(e), "'bar' is not defined in schema (not a valid property)")
         doc.save()
         self.assert_(not hasattr(doc, "bar"))
         self.assert_(doc._doc['foo'] == "test")
