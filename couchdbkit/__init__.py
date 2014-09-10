@@ -22,7 +22,7 @@ from .schema import (
     Property, IntegerProperty, DecimalProperty, BooleanProperty, FloatProperty, StringProperty,
     DateTimeProperty, DateProperty, TimeProperty,
     dict_to_json, dict_to_json, dict_to_json,
-    value_to_python, dict_to_python,
+    dict_to_python,
     DocumentSchema, DocumentBase, Document, StaticDocument, contain,
     QueryMixin, AttachmentMixin,
     SchemaProperty, SchemaListProperty, SchemaDictProperty,

@@ -34,7 +34,7 @@ __all__ = ['Property', 'StringProperty', 'IntegerProperty',
             'DecimalProperty', 'BooleanProperty', 'FloatProperty',
             'DateTimeProperty', 'DateProperty', 'TimeProperty',
             'dict_to_json', 'list_to_json', 'value_to_json',
-            'value_to_python', 'dict_to_python', 'list_to_python',
+            'dict_to_python', 'list_to_python',
             'convert_property', 'DocumentSchema', 'Document',
             'SchemaProperty', 'SchemaListProperty', 'ListProperty',
             'DictProperty', 'StringDictProperty', 'StringListProperty',
@@ -42,7 +42,8 @@ __all__ = ['Property', 'StringProperty', 'IntegerProperty',
 
 
 DEFAULT_NAMES = ('verbose_name', 'db_table', 'ordering',
-                 'app_label')
+                 'app_label', 'string_conversions', 'properties',
+                 'update_properties')
 
 class Options(object):
     """ class based on django.db.models.options. We only keep
@@ -180,7 +181,6 @@ SetProperty = schema.SetProperty
 dict_to_json = schema.dict_to_json
 list_to_json = schema.list_to_json
 value_to_json = schema.value_to_json
-value_to_python = schema.value_to_python
 dict_to_python = schema.dict_to_python
 list_to_python = schema.list_to_python
 convert_property = schema.convert_property
