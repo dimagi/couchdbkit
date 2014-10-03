@@ -214,7 +214,7 @@ def read_json(filename, use_environment=False):
 import jsonobject.base
 
 
-class ProxyDict(jsonobject.base.SimpleDict):
+class ProxyDict(jsonobject.utils.SimpleDict):
     def __init__(self, parent, *args, **kwargs):
         super(ProxyDict, self).__init__(*args, **kwargs)
         self.parent = parent
