@@ -78,8 +78,8 @@ More fields types will be supported soon.
 """
 
 
+from collections import OrderedDict
 from django.utils.text import capfirst
-from django.utils.datastructures import SortedDict
 from django.forms.util import ErrorList
 from django.forms.forms import BaseForm, get_declared_fields
 from django.forms import fields as f
@@ -120,7 +120,7 @@ def document_to_dict(instance, properties=None, exclude=None):
 
 def fields_for_document(document, properties=None, exclude=None):
     """
-    Returns a ``SortedDict`` containing form fields for the given document.
+    Returns a ``OrderedDict`` containing form fields for the given document.
 
     ``properties`` is an optional list of properties names. If provided, 
     only the named properties will be included in the returned properties.
@@ -162,7 +162,7 @@ def fields_for_document(document, properties=None, exclude=None):
                 
             field_list.append((prop.name, 
                 FIELDS_PROPERTES_MAPPING[property_class_name](**defaults)))
-    return SortedDict(field_list)
+    return OrderedDict(field_list)
 
 class DocumentFormOptions(object):
     def __init__(self, options=None):
