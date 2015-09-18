@@ -3,13 +3,13 @@
 # This file is part of couchdbkit released under the MIT license. 
 # See the NOTICE for more information.
 
-from django.test.simple import DjangoTestSuiteRunner
+from django.test.runner import DiscoverRunner
 from django.conf import settings
 
 from . import loading
 from ...exceptions import ResourceNotFound
 
-class CouchDbKitTestSuiteRunner(DjangoTestSuiteRunner):
+class CouchDbKitTestSuiteRunner(DiscoverRunner):
     """
     A test suite runner for couchdbkit.  This offers the exact same functionality
     as the default django test suite runner, except that it connects all the couchdbkit
