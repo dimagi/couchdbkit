@@ -98,7 +98,7 @@ class CouchdbResource(Resource):
         """
         # logging information
         start_time = datetime.utcnow()
-        error_status = end_time = None
+        error_status = None
         has_error = False
 
         headers = headers or {}
@@ -115,7 +115,6 @@ class CouchdbResource(Resource):
         try:
             resp = Resource.request(self, method, path=path,
                              payload=payload, headers=headers, **params)
-            end_time = datetime.utcnow()
         except ResourceError, e:
             msg = getattr(e, 'msg', '')
             if e.response and msg:
@@ -148,7 +147,8 @@ class CouchdbResource(Resource):
         except:
             raise
         finally:
-            duration = end_time-start_time
+            end_time = datetime.utcnow()
+            duration = end_time - start_time
             logging_context = dict(
                 method=method,
                 path=path,
