@@ -29,4 +29,4 @@ from .schema import (
     ListProperty, DictProperty, StringDictProperty, StringListProperty, SetProperty
 )
 
-from .logging import (LOG_LEVELS, set_logging)
+from .logging import (LOG_LEVELS, set_logging, logger)

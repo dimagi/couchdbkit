@@ -9,6 +9,10 @@ LOG_LEVELS = {
     "debug": logging.DEBUG
 }
 
+
+logger = logging.getLogger('couchdbkit')
+
+
 def set_logging(level, handler=None):
     """
     Set level of logging, and choose where to display/save logs
@@ -18,7 +22,6 @@ def set_logging(level, handler=None):
         handler = logging.StreamHandler()
 
     loglevel = LOG_LEVELS.get(level, logging.INFO)
-    logger = logging.getLogger('couchdbkit')
     logger.setLevel(loglevel)
     format = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
     datefmt = r"%Y-%m-%d %H:%M:%S"
