@@ -129,7 +129,6 @@ class CouchdbResource(Resource):
             else:
                 error = msg
 
-            end_time = datetime.utcnow()
             has_error = True
             error_status = e.status_int
             if e.status_int == 404:
