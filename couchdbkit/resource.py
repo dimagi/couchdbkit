@@ -21,6 +21,7 @@ Example:
 """
 import base64
 import re
+from datetime import datetime
 
 from restkit import Resource, ClientResponse
 from restkit.errors import ResourceError, RequestFailed, RequestError
@@ -30,6 +31,7 @@ from . import __version__
 from .exceptions import ResourceNotFound, ResourceConflict, \
 PreconditionFailed
 from .utils import json
+from .logging import request_logger
 
 USER_AGENT = 'couchdbkit/%s' % __version__
 
@@ -94,6 +96,10 @@ class CouchdbResource(Resource):
         @return: tuple (data, resp), where resp is an `httplib2.Response`
             object and data a python object (often a dict).
         """
+        # logging information
+        start_time = datetime.utcnow()
+        error_status = None
+        has_error = False
 
         headers = headers or {}
         headers.setdefault('Accept', 'application/json')
@@ -109,7 +115,6 @@ class CouchdbResource(Resource):
         try:
             resp = Resource.request(self, method, path=path,
                              payload=payload, headers=headers, **params)
-
         except ResourceError, e:
             msg = getattr(e, 'msg', '')
             if e.response and msg:
@@ -124,6 +129,9 @@ class CouchdbResource(Resource):
             else:
                 error = msg
 
+            end_time = datetime.utcnow()
+            has_error = True
+            error_status = e.status_int
             if e.status_int == 404:
                 raise ResourceNotFound(error, http_code=404,
                         response=e.response)
@@ -138,6 +146,20 @@ class CouchdbResource(Resource):
                 raise
         except:
             raise
+        finally:
+            end_time = datetime.utcnow()
+            duration = end_time - start_time
+            logging_context = dict(
+                method=method,
+                path=path,
+                params=params,
+                start_time=start_time,
+                end_time=end_time,
+                has_error=has_error,
+                error_status=error_status,
+                duration=duration,
+            )
+            request_logger.debug('{} to {} took {}'.format(method, path, duration), extra=logging_context)
 
         return resp
 

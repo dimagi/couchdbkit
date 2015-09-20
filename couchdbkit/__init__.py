@@ -29,30 +29,4 @@ from .schema import (
     ListProperty, DictProperty, StringDictProperty, StringListProperty, SetProperty
 )
 
-import logging
-
-LOG_LEVELS = {
-    "critical": logging.CRITICAL,
-    "error": logging.ERROR,
-    "warning": logging.WARNING,
-    "info": logging.INFO,
-    "debug": logging.DEBUG
-}
-
-def set_logging(level, handler=None):
-    """
-    Set level of logging, and choose where to display/save logs
-    (file or standard output).
-    """
-    if not handler:
-        handler = logging.StreamHandler()
-
-    loglevel = LOG_LEVELS.get(level, logging.INFO)
-    logger = logging.getLogger('couchdbkit')
-    logger.setLevel(loglevel)
-    format = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
-    datefmt = r"%Y-%m-%d %H:%M:%S"
-
-    handler.setFormatter(logging.Formatter(format, datefmt))
-    logger.addHandler(handler)
-
+from .logging import (LOG_LEVELS, set_logging, logger)
