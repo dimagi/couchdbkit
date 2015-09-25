@@ -26,6 +26,7 @@ Example:
     >>> del server['simplecouchdb_test']
 
 """
+from couchdbkit.logging import error_logger
 
 UNKOWN_INFO = {}
 
@@ -593,6 +594,12 @@ class Database(object):
         for i, res in enumerate(results):
             if 'error' in res:
                 errors.append(res)
+                logging_context = dict(
+                    method='save_docs',
+                    params=params,
+                    error=res['error'],
+                )
+                error_logger.error("save_docs error", extra=logging_context)
             else:
                 if docs_schema[i]:
                     docs[i]._doc.update({

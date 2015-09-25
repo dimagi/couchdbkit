@@ -12,6 +12,7 @@ LOG_LEVELS = {
 
 logger = logging.getLogger('couchdbkit')
 request_logger = logging.getLogger('couchdbkit.request')
+error_logger = logging.getLogger('couchdbkit.error')
 
 
 def set_logging(level, handler=None):
