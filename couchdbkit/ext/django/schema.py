@@ -124,6 +124,9 @@ class DocumentMeta(schema.SchemaProperties):
         else:
             meta = attr_meta
 
+        if getattr(meta, 'abstract', False):
+            return new_class
+
         if getattr(meta, 'app_label', None) is None:
             document_module = sys.modules[new_class.__module__]
             app_label = document_module.__name__.split('.')[-2]
