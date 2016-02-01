@@ -152,12 +152,30 @@ class DocumentBase(DocumentSchema):
 
         """
         db = cls.get_db()
-        docs_to_save= [doc for doc in docs if doc._doc_type == cls._doc_type]
-        if not len(docs_to_save) == len(docs):
+        if any(doc._doc_type != cls._doc_type for doc in docs):
             raise ValueError("one of your documents does not have the correct type")
-        db.bulk_save(docs_to_save, use_uuids=use_uuids, all_or_nothing=all_or_nothing)
+        db.bulk_save(docs, use_uuids=use_uuids, all_or_nothing=all_or_nothing)
 
     bulk_save = save_docs
+
+    @classmethod
+    def delete_docs(cls, docs, all_or_nothing=False, empty_on_delete=False):
+        """ Bulk delete documents in a database
+
+        @params docs: list of couchdbkit.schema.Document instance
+        @param all_or_nothing: In the case of a power failure, when the database
+        restarts either all the changes will have been saved or none of them.
+        However, it does not do conflict checking, so the documents will
+        be committed even if this creates conflicts.
+        @param empty_on_delete: default is False if you want to make
+        """
+        db = cls.get_db()
+        if any(doc._doc_type != cls._doc_type for doc in docs):
+            raise ValueError("one of your documents does not have the correct type")
+        db.bulk_delete(docs, all_or_nothing=all_or_nothing,
+                       empty_on_delete=empty_on_delete)
+
+    bulk_delete = delete_docs
 
     @classmethod
     def get(cls, docid, rev=None, db=None, dynamic_properties=True):
