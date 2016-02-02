@@ -168,6 +168,8 @@ class DocumentBase(DocumentSchema):
         However, it does not do conflict checking, so the documents will
         be committed even if this creates conflicts.
         @param empty_on_delete: default is False if you want to make
+        sure the doc is emptied and will not be stored as is in Apache
+        CouchDB.
         """
         db = cls.get_db()
         if any(doc._doc_type != cls._doc_type for doc in docs):
