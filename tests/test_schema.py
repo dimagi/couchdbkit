@@ -213,8 +213,6 @@ class DocumentTestCase(unittest.TestCase):
 
         self.server.delete_db('couchdbkit_test')
 
-
-
     def testGet(self):
         db = self.server.create_db('couchdbkit_test')
         class Test(Document):
@@ -634,6 +632,28 @@ class DocumentTestCase(unittest.TestCase):
         print list(db.all_docs(include_docs=True))
         self.assert_(len(db) == 0)
         self.assert_(db.info()['doc_del_count'] == 3)
+
+        self.server.delete_db('couchdbkit_test')
+
+    def testDocumentBulkDelete(self):
+        db = self.server.create_db('couchdbkit_test')
+
+        class Test(Document):
+            string = StringProperty()
+        Test._db = db
+
+        doc = Test()
+        doc.string = "test"
+        doc.save()
+        doc2 = Test()
+        doc2.string = "test2"
+        doc2.save()
+
+        Test.bulk_delete([doc, doc2])
+
+        for doc_id in [doc._id, doc2._id]:
+            with self.assertRaises(ResourceNotFound):
+                Test.get(doc_id)
 
         self.server.delete_db('couchdbkit_test')
 
