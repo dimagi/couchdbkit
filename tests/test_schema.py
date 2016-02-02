@@ -651,8 +651,9 @@ class DocumentTestCase(unittest.TestCase):
 
         Test.bulk_delete([doc, doc2])
 
-        with self.assertRaises(ResourceNotFound):
-            Test.get(doc._id)
+        for doc_id in [doc._id, doc2._id]:
+            with self.assertRaises(ResourceNotFound):
+                Test.get(doc_id)
 
         self.server.delete_db('couchdbkit_test')
 
