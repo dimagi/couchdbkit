@@ -154,7 +154,7 @@ class DocumentBase(DocumentSchema):
         db = cls.get_db()
         if any(doc._doc_type != cls._doc_type for doc in docs):
             raise ValueError("one of your documents does not have the correct type")
-        db.bulk_save(docs, use_uuids=use_uuids, all_or_nothing=all_or_nothing)
+        db.bulk_save(tuple(docs), use_uuids=use_uuids, all_or_nothing=all_or_nothing)
 
     bulk_save = save_docs
 
