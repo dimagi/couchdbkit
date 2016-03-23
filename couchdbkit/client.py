@@ -558,7 +558,7 @@ class Database(object):
 
         """
 
-        if not isinstance(docs, ('list', 'tuple')):
+        if not isinstance(docs, (list, tuple)):
             docs = tuple(docs)
         docs1 = []
         docs_schema = []
