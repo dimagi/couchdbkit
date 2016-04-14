@@ -48,6 +48,7 @@ __all__ = ['Property', 'StringProperty', 'IntegerProperty',
 DEFAULT_NAMES = ('verbose_name', 'db_table', 'ordering',
                  'app_label', 'string_conversions', 'properties',
                  'update_properties')
+DISCARD_NAMES = ('abstract',)
 
 class Options(object):
     """ class based on django.db.models.options. We only keep
@@ -75,7 +76,7 @@ class Options(object):
                 # Ignore any private attributes that Django doesn't care about.
                 # NOTE: We can't modify a dictionary's contents while looping
                 # over it, so we loop over the *original* dictionary instead.
-                if name.startswith('_'):
+                if name.startswith('_') or name in DISCARD_NAMES:
                     del meta_attrs[name]
             for attr_name in DEFAULT_NAMES:
                 if attr_name in meta_attrs:
@@ -122,10 +123,9 @@ class DocumentMeta(schema.SchemaProperties):
         if not attr_meta:
             meta = getattr(new_class, 'Meta', None)
         else:
+            if getattr(attr_meta, 'abstract', False):
+                return new_class
             meta = attr_meta
-
-        if getattr(meta, 'abstract', False):
-            return new_class
 
         if getattr(meta, 'app_label', None) is None:
             document_module = sys.modules[new_class.__module__]
