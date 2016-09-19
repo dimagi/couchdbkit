@@ -88,7 +88,7 @@ class CouchdbkitHandler(object):
         When temp is specified, it is appended to the app's name on the docid.
         It can then be updated in the background and copied over the existing
         design docs to reduce blocking time of view updates """
-        app_name = app.__name__.rsplit('.', 1)[0]
+        app_name = app.name.rsplit('.', 1)[0]
         app_labels = set()
         schema_list = self.app_schema.values()
         for schema_dict in schema_list:
@@ -103,7 +103,7 @@ class CouchdbkitHandler(object):
                 print "sync `%s` in CouchDB" % app_name
             db = self.get_db(app_label)
 
-            app_path = os.path.abspath(os.path.join(sys.modules[app.__name__].__file__, ".."))
+            app_path = app.path
             design_path = "%s/%s" % (app_path, "_design")
             if not os.path.isdir(design_path):
                 if settings.DEBUG:
@@ -136,7 +136,7 @@ class CouchdbkitHandler(object):
 
         This is used to reduce the waiting time for blocking view updates """
 
-        app_name = app.__name__.rsplit('.', 1)[0]
+        app_name = app.name.rsplit('.', 1)[0]
         app_labels = set()
         schema_list = self.app_schema.values()
         for schema_dict in schema_list:
