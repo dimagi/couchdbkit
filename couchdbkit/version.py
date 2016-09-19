@@ -3,5 +3,5 @@
 # This file is part of couchdbkit released under the MIT license.
 # See the NOTICE for more information.
 
-version_info = (0, 7, 4, 1)
+version_info = (0, 7, 4, 2)
 __version__ =  ".".join(map(str, version_info))
