@@ -92,7 +92,7 @@ It won't destroy your datas, just synchronize views.
 import django
 from django.db.models import signals
 
-def syncdb(app, created_models, verbosity=2, **kwargs):
+def syncdb(app, verbosity=2, **kwargs):
     """ function used by syncdb signal """
     from couchdbkit.ext.django.loading import couchdbkit_handler
     couchdbkit_handler.sync(app, verbosity=verbosity)
