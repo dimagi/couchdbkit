@@ -98,6 +98,7 @@ class CouchdbResource(Resource):
         """
         # logging information
         start_time = datetime.utcnow()
+        resp = None
         error_status = None
         has_error = False
 
@@ -154,8 +155,9 @@ class CouchdbResource(Resource):
                 params=params,
                 start_time=start_time,
                 end_time=end_time,
+                status_code=resp.status_int if resp else error_status,
+                content_length=resp.headers.get('content-length') if resp else None,
                 has_error=has_error,
-                error_status=error_status,
                 duration=duration,
             )
             request_logger.debug('{} to {} took {}'.format(method, path, duration), extra=logging_context)
