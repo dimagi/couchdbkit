@@ -24,8 +24,8 @@ import re
 from datetime import datetime
 
 from restkit import Resource, ClientResponse
-from restkit.errors import ResourceError, RequestFailed, RequestError
-from restkit.util import url_quote
+from restkit.errors import ResourceError, RequestFailed
+from restkit.util import url_quote, make_uri
 
 from . import __version__
 from .exceptions import ResourceNotFound, ResourceConflict, \
@@ -147,6 +147,7 @@ class CouchdbResource(Resource):
         except:
             raise
         finally:
+            database = _get_db_from_uri(self.uri, path)
             end_time = datetime.utcnow()
             duration = end_time - start_time
             logging_context = dict(
@@ -159,8 +160,9 @@ class CouchdbResource(Resource):
                 content_length=resp.headers.get('content-length') if resp else None,
                 has_error=has_error,
                 duration=duration,
+                database=database
             )
-            request_logger.debug('{} to {} took {}'.format(method, path, duration), extra=logging_context)
+            request_logger.debug('{} to {}/{} took {}'.format(method, database, path, duration), extra=logging_context)
 
         return resp
 
@@ -195,3 +197,11 @@ def encode_attachments(attachments):
         else:
             v['data'] = re_sp.sub('', base64.b64encode(v['data']))
     return attachments
+
+
+def _get_db_from_uri(uri, path):
+    full_uri = make_uri(uri, path)
+    try:
+        return full_uri.split('/')[3]
+    except IndexError:
+        return 'unknown'
