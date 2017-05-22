@@ -135,7 +135,7 @@ class DocumentBase(DocumentSchema):
             if isinstance(prop, p.DateTimePropertyCouchDB) and prop.auto_now_add:
                 setattr(self, prop_name, datetime.utcnow())
             elif isinstance(prop, p.DatePropertyCouchDB) and prop.auto_now_add:
-                setattr(self, prop_name, date.today())
+                setattr(self, prop_name, datetime.utcnow().date())
 
         doc = self.to_json()
         db.save_doc(doc, **params)

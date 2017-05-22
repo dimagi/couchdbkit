@@ -466,7 +466,7 @@ class DocumentTestCase(unittest.TestCase):
             field4 = DateProperty(auto_now_add=True)
 
         before = datetime.datetime.utcnow() - datetime.timedelta(minutes=1)
-        today = datetime.date.today()
+        today = datetime.datetime.utcnow().date()
         db = self.server.create_db('couchdbkit_test')
         TestDoc._db = db
 
