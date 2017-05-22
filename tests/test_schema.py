@@ -458,6 +458,34 @@ class DocumentTestCase(unittest.TestCase):
         finally:
             self.server.delete_db('couchdbkit_test')
 
+    def test_auto_now_add(self):
+        class TestDoc(Document):
+            field1 = DateTimeProperty(auto_now_add=True)
+            field2 = DateTimeProperty(auto_now_add=False)
+            field3 = DateTimeProperty()
+            field4 = DateProperty(auto_now_add=True)
+
+        before = datetime.datetime.utcnow() - datetime.timedelta(minutes=1)
+        today = datetime.datetime.utcnow().date()
+        db = self.server.create_db('couchdbkit_test')
+        TestDoc._db = db
+
+        doc = TestDoc()
+        doc.save()
+
+        result = TestDoc.view('_all_docs', include_docs=True)
+        self.assertEqual(len(result), 1)
+        doc, = result.all()
+        self.assertGreaterEqual(doc.field1, before)
+        self.assertIsNone(doc.field2)
+        self.assertIsNone(doc.field3)
+        self.assertGreaterEqual(doc.field4, today)
+
+    def test_auto_now_add_bad_arg(self):
+        with self.assertRaises(ValueError):
+            class TestDoc(Document):
+                field1 = DateTimeProperty(auto_now_add='BOOM!')
+
     def testOne(self):
         class TestDoc(Document):
             field1 = StringProperty()

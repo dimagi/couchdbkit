@@ -40,6 +40,24 @@ class Property(DefaultProperty):
         raise NotImplementedError()
 
 
+class AutoNowAddMixin(object):
+
+    def __init__(self, *args, **kwargs):
+        self.auto_now_add = kwargs.pop('auto_now_add', False)
+        if self.auto_now_add not in {True, False}:
+            raise ValueError(u'auto_now_add={} must be True or False'.format(self.auto_now_add))
+
+        return super(AutoNowAddMixin, self).__init__(*args, **kwargs)
+
+
+class DateTimePropertyCouchDB(AutoNowAddMixin, DateTimeProperty):
+    pass
+
+
+class DatePropertyCouchDB(AutoNowAddMixin, DateProperty):
+    pass
+
+
 def _not_implemented(*args, **kwargs):
     raise NotImplementedError()
 
