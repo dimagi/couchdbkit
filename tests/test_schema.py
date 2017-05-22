@@ -463,8 +463,10 @@ class DocumentTestCase(unittest.TestCase):
             field1 = DateTimeProperty(auto_now_add=True)
             field2 = DateTimeProperty(auto_now_add=False)
             field3 = DateTimeProperty()
+            field4 = DateProperty(auto_now_add=True)
 
         before = datetime.datetime.utcnow() - datetime.timedelta(minutes=1)
+        today = datetime.date.today()
         db = self.server.create_db('couchdbkit_test')
         TestDoc._db = db
 
@@ -477,6 +479,7 @@ class DocumentTestCase(unittest.TestCase):
         self.assertGreaterEqual(doc.field1, before)
         self.assertIsNone(doc.field2)
         self.assertIsNone(doc.field3)
+        self.assertGreaterEqual(doc.field4, today)
 
     def test_auto_now_add_bad_arg(self):
         with self.assertRaises(ValueError):

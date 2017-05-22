@@ -163,7 +163,7 @@ from .properties import (
         BooleanProperty,
         FloatProperty,
         DateTimePropertyCouchDB as DateTimeProperty,
-        DateProperty,
+        DatePropertyCouchDB as DateProperty,
         TimeProperty,
         DictProperty,
         StringDictProperty,
