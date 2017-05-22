@@ -7,6 +7,7 @@
 to map CouchDB document in Python statically, dynamically or both
 """
 import copy
+from datetime import datetime
 
 import jsonobject
 from jsonobject.exceptions import DeleteNotAllowed
@@ -130,8 +131,13 @@ class DocumentBase(DocumentSchema):
         self.validate()
         db = self.get_db()
 
+        for prop_name, prop in self.properties().iteritems():
+            if isinstance(prop, p.DateTimeProperty) and prop.auto_now_add:
+                setattr(self, prop_name, datetime.utcnow())
+
         doc = self.to_json()
         db.save_doc(doc, **params)
+
         if '_id' in doc and '_rev' in doc:
             self._doc.update(doc)
         elif '_id' in doc:

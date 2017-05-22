@@ -40,6 +40,16 @@ class Property(DefaultProperty):
         raise NotImplementedError()
 
 
+class DateTimePropertyCouchDB(DateTimeProperty):
+
+    def __init__(self, *args, **kwargs):
+        self.auto_now_add = kwargs.pop('auto_now_add', False)
+        if self.auto_now_add not in {True, False, None}:
+            raise ValueError(u'auto_now_add={} must be True, False, or None'.format(self.auto_now_add))
+
+        return super(DateTimePropertyCouchDB, self).__init__(*args, **kwargs)
+
+
 def _not_implemented(*args, **kwargs):
     raise NotImplementedError()
 

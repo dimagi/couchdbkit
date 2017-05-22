@@ -162,7 +162,7 @@ from .properties import (
         DecimalProperty,
         BooleanProperty,
         FloatProperty,
-        DateTimeProperty,
+        DateTimePropertyCouchDB as DateTimeProperty,
         DateProperty,
         TimeProperty,
         DictProperty,
