@@ -50,11 +50,11 @@ class AutoNowAddMixin(object):
         return super(AutoNowAddMixin, self).__init__(*args, **kwargs)
 
 
-class DateTimePropertyCouchDB(AutoNowAddMixin):
+class DateTimePropertyCouchDB(AutoNowAddMixin, DateTimeProperty):
     pass
 
 
-class DatePropertyCouchDB(AutoNowAddMixin):
+class DatePropertyCouchDB(AutoNowAddMixin, DateProperty):
     pass
 
 
