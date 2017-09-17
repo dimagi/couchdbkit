@@ -220,7 +220,7 @@ class Server(object):
 
     def __contains__(self, dbname):
         try:
-            self.cloudnat_client[dbname]
+            self.cloudant_database[dbname]
         except KeyError:
             return False
         return True
