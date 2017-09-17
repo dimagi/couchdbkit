@@ -187,16 +187,20 @@ class Server(object):
             "target": target,
         }
         payload.update(params)
-        resp = self.res.post('/_replicate', payload=payload)
-        return resp.json_body
+        resp = self._request_session.post(
+            urljoin(self.uri, '/_replicate'), payload=payload
+        )
+        return resp.json()
 
     def active_tasks(self):
         """ return active tasks """
         resp = self.res.get('/_active_tasks')
-        return resp.json_body
+        resp = self._request_session.get(urljoin(self.uri, '/_active_tasks'))
+        return resp.json()
 
     def uuids(self, count=1):
-        return self.res.get('/_uuids', count=count).json_body
+        resp = self._request_session.get(urljoin(self.uri, '/_uuids'), params={'count': count})
+        return resp.json()
 
     def next_uuid(self, count=None):
         """
