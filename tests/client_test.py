@@ -582,12 +582,6 @@ class ClientDatabaseTestCase(unittest.TestCase):
 
         del self.Server['couchdbkit_test']
 
-    def testSetSecurity(self):
-        db = self.Server.create_db('couchdbkit_test')
-        res = db.set_security({"meta": "test"})
-        self.assert_(res['ok'] == True)
-        del self.Server['couchdbkit_test']
-
     def testGetSecurity(self):
         db = self.Server.create_db('couchdbkit_test')
         db.set_security({"meta": "test"})

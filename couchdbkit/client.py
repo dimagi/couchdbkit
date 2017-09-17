@@ -38,6 +38,7 @@ import time
 
 from cloudant.client import CouchDB
 from cloudant.database import CouchDatabase
+from cloudant.security_document import SecurityDocument
 from restkit.util import url_quote
 from six.moves.urllib.parse import urljoin, unquote
 
@@ -277,9 +278,13 @@ class Database(object):
 
         self.res = server.res(self.dbname)
         self._request_session = self.server._request_session
+        self.database_url = self.cloudant_database.database_url
 
     def __repr__(self):
         return "<%s %s>" % (self.__class__.__name__, self.dbname)
+
+    def _database_path(self, path):
+        return '/'.join([self.database_url, path])
 
     def info(self):
         """
@@ -291,11 +296,17 @@ class Database(object):
 
     def set_security(self, secobj):
         """ set database securrity object """
-        return self._request_session.put(urljoin(self.uri, "/_security"), data=secobj).json()
+        with SecurityDocument(self.cloudant_database) as sec_doc:
+            # context manager saves
+            for key in sec_doc:
+                del sec_doc[key]
+            for k, v in secobj.items():
+                sec_doc[k] = v
+        return self.get_security()
 
     def get_security(self):
         """ get database secuirity object """
-        return self._request_session.get(urljoin(self.uri, "/_security"), data=secobj).json()
+        return self.cloudant_database.get_security_document()
 
     def compact(self, dname=None):
         """ compact database
@@ -305,14 +316,15 @@ class Database(object):
         path = "/_compact"
         if dname is not None:
             path = "%s/%s" % (path, resource.escape_docid(dname))
-        path = urljoin(self.uri, path)
-        res = self._request_session.post(path, headers={"Content-Type":
-            "application/json"})
+        path = self._database_path(path)
+        res = self._request_session.post(path, headers={"Content-Type": "application/json"})
         return res.json()
 
     def view_cleanup(self):
-        res = self._request_session.post(urljoin(self.uri, '/_view_cleanup'), headers={"Content-Type":
-            "application/json"})
+        res = self._request_session.post(
+            self._database_path(self.database_url, '_view_cleanup'),
+            headers={"Content-Type": "application/json"}
+        )
         return res.json()
 
     def flush(self):
@@ -320,9 +332,7 @@ class Database(object):
         except design docs."""
 
         # save ddocs
-        all_ddocs = self.all_docs(startkey="_design",
-                            endkey="_design/"+u"\u9999",
-                            include_docs=True)
+        all_ddocs = self.all_docs(startkey="_design", endkey="_design/"+u"\u9999", include_docs=True)
         ddocs = []
         for ddoc in all_ddocs:
             doc = ddoc['doc']
@@ -362,7 +372,7 @@ class Database(object):
         @return: boolean, True if document exist
         """
 
-        resp = self._request_session.head(urljoin(self.uri, resource.escape_docid(docid)))
+        resp = self._request_session.head(self._database_path(resource.escape_docid(docid)))
         return resp.status_code != 404
 
     def open_doc(self, docid, **params):
