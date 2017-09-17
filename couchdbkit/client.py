@@ -36,6 +36,7 @@ from itertools import groupby
 from mimetypes import guess_type
 import time
 
+import cloudant
 from cloudant.client import CouchDB
 from cloudant.database import CouchDatabase
 from cloudant.document import Document
@@ -184,21 +185,19 @@ class Server(object):
         http://wiki.apache.org/couchdb/Replication
 
         """
-        payload = {
-            "source": source,
-            "target": target,
-        }
-        payload.update(params)
-        resp = self.res.post('/_replicate', payload=payload)
-        return resp.json_body
+        replicator = cloudant.replicator.Replication(self.cloudant_client)
+        source_db = Database(self.cloudant_client, source)
+        target_db = Database(self.cloudant_client, target)
+        return replicator.create_replication(source_db, target_db, **params)
 
     def active_tasks(self):
         """ return active tasks """
-        resp = self.res.get('/_active_tasks')
-        return resp.json_body
+        resp = self._request_session.get(urljoin(self.uri, '/_active_tasks'))
+        return resp.json()
 
     def uuids(self, count=1):
-        return self.res.get('/_uuids', count=count).json_body
+        resp = self._request_session.get(urljoin(self.uri, '/_uuids'), params={'count': count})
+        return resp.json()
 
     def next_uuid(self, count=None):
         """
