@@ -37,7 +37,9 @@ from mimetypes import guess_type
 import time
 
 from cloudant.client import CouchDB
+from cloudant.database import CouchDatabase
 from restkit.util import url_quote
+from six.moves.urllib.parse import urljoin, unquote
 
 from .exceptions import InvalidAttachment, NoResultFound, \
 ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound
@@ -105,7 +107,7 @@ class Server(object):
         else:
             self.res = self.resource_class(uri, **client_opts)
         self._uuids = deque()
-        self.cloudant_client = CouchDB('', '', url=uri)
+        self.cloudant_client = CouchDB('', '', url=uri, admin_party=True, connect=True)
 
     def info(self):
         """ info of server
@@ -114,17 +116,18 @@ class Server(object):
 
         """
         try:
-            resp = self.res.get()
+            resp = self.cloudant_client.r_session.get(self.uri)
         except Exception:
             return UNKOWN_INFO
 
-        return resp.json_body
+        return resp.json()
 
     def all_dbs(self):
         """ get list of databases in CouchDb host
 
         """
-        return self.res.get('/_all_dbs').json_body
+        resp = self.cloudant_client.r_session.get(urljoin(self.uri, '/_all_dbs'))
+        return resp.json()
 
     def get_db(self, dbname, **params):
         """
@@ -253,6 +256,7 @@ class Database(object):
         """
         self.uri = uri.rstrip('/')
         self.server_uri, self.dbname = self.uri.rsplit("/", 1)
+        self.cloudant_dbname = unquote(self.dbname)
 
         if server is not None:
             if not hasattr(server, 'next_uuid'):
@@ -262,12 +266,12 @@ class Database(object):
         else:
             self.server = server = Server(self.server_uri, **params)
 
+        self.cloudant_client = self.server.cloudant_client
+
         validate_dbname(self.dbname)
+        self.cloudant_database = CouchDatabase(self.cloudant_client, self.cloudant_dbname)
         if create:
-            try:
-                self.server.res.head('/%s/' % self.dbname)
-            except ResourceNotFound:
-                self.server.res.put('/%s/' % self.dbname, **params).json_body
+            self.cloudant_database.create()
 
         self.res = server.res(self.dbname)
 
@@ -280,7 +284,7 @@ class Database(object):
 
         @return: dict
         """
-        return self.res.get().json_body
+        return self.cloudant_database.metadata()
 
     def set_security(self, secobj):
         """ set database securrity object """
