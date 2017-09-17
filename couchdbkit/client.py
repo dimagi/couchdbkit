@@ -109,6 +109,10 @@ class Server(object):
         self._uuids = deque()
         self.cloudant_client = CouchDB('', '', url=uri, admin_party=True, connect=True)
 
+    @property
+    def _request_session(self):
+        return self.cloudant_client.r_session
+
     def info(self):
         """ info of server
 
@@ -116,7 +120,7 @@ class Server(object):
 
         """
         try:
-            resp = self.cloudant_client.r_session.get(self.uri)
+            resp = self._request_session.get(self.uri)
         except Exception:
             return UNKOWN_INFO
 
@@ -126,7 +130,7 @@ class Server(object):
         """ get list of databases in CouchDb host
 
         """
-        resp = self.cloudant_client.r_session.get(urljoin(self.uri, '/_all_dbs'))
+        resp = self._request_session.get(urljoin(self.uri, '/_all_dbs'))
         return resp.json()
 
     def get_db(self, dbname, **params):
@@ -212,14 +216,12 @@ class Server(object):
         return Database(self._db_uri(dbname), server=self)
 
     def __delitem__(self, dbname):
-        ret = self.res.delete('/%s/' % url_quote(dbname,
-            safe=":")).json_body
-        return ret
+        self.cloudant_client.delete_database(dbname)
 
     def __contains__(self, dbname):
         try:
-            self.res.head('/%s/' % url_quote(dbname, safe=":"))
-        except:
+            self.cloudnat_client[dbname]
+        except KeyError:
             return False
         return True
 
@@ -274,6 +276,7 @@ class Database(object):
             self.cloudant_database.create()
 
         self.res = server.res(self.dbname)
+        self._request_session = self.server._request_session
 
     def __repr__(self):
         return "<%s %s>" % (self.__class__.__name__, self.dbname)
@@ -288,11 +291,11 @@ class Database(object):
 
     def set_security(self, secobj):
         """ set database securrity object """
-        return self.res.put("/_security", payload=secobj).json_body
+        return self._request_session.put(urljoin(self.uri, "/_security"), data=secobj).json()
 
     def get_security(self):
         """ get database secuirity object """
-        return self.res.get("/_security").json_body
+        return self._request_session.get(urljoin(self.uri, "/_security"), data=secobj).json()
 
     def compact(self, dname=None):
         """ compact database
@@ -302,14 +305,15 @@ class Database(object):
         path = "/_compact"
         if dname is not None:
             path = "%s/%s" % (path, resource.escape_docid(dname))
-        res = self.res.post(path, headers={"Content-Type":
+        path = urljoin(self.uri, path)
+        res = self._request_session.post(path, headers={"Content-Type":
             "application/json"})
-        return res.json_body
+        return res.json()
 
     def view_cleanup(self):
-        res = self.res.post('/_view_cleanup', headers={"Content-Type":
+        res = self._request_session.post(urljoin(self.uri, '/_view_cleanup'), headers={"Content-Type":
             "application/json"})
-        return res.json_body
+        return res.json()
 
     def flush(self):
         """ Remove all docs from a database
@@ -342,9 +346,7 @@ class Database(object):
         # we let a chance to the system to sync
         times = 0
         while times < 10:
-            try:
-                self.server.res.head('/%s/' % self.dbname)
-            except ResourceNotFound:
+            if self.dbname in self.server:
                 break
             time.sleep(0.2)
             times += 1
@@ -360,11 +362,8 @@ class Database(object):
         @return: boolean, True if document exist
         """
 
-        try:
-            self.res.head(resource.escape_docid(docid))
-        except ResourceNotFound:
-            return False
-        return True
+        resp = self._request_session.head(urljoin(self.uri, resource.escape_docid(docid)))
+        return resp.status_code != 404
 
     def open_doc(self, docid, **params):
         """Get document from database
@@ -1111,6 +1110,3 @@ class ViewResults(object):
 
     def __nonzero__(self):
         return bool(len(self))
-
-
-
