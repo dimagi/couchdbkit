@@ -36,6 +36,7 @@ from itertools import groupby
 from mimetypes import guess_type
 import time
 
+from cloudant.client import CouchDB
 from restkit.util import url_quote
 
 from .exceptions import InvalidAttachment, NoResultFound, \
@@ -104,6 +105,7 @@ class Server(object):
         else:
             self.res = self.resource_class(uri, **client_opts)
         self._uuids = deque()
+        self.cloudant_client = CouchDB('', '', url=uri)
 
     def info(self):
         """ info of server
