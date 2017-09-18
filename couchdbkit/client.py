@@ -41,8 +41,10 @@ from cloudant.client import CouchDB
 from cloudant.database import CouchDatabase
 from cloudant.document import Document
 from cloudant.security_document import SecurityDocument
+from requests.exceptions import HTTPError
 from restkit.util import url_quote
-from six.moves.urllib.parse import urljoin, unquote
+import six
+from six.moves.urllib.parse import quote, urljoin, unquote
 
 from .exceptions import InvalidAttachment, NoResultFound, \
 ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound
@@ -393,8 +395,15 @@ class Database(object):
                 raise TypeError("invalid schema")
             wrapper = schema.wrap
 
-        docid = resource.escape_docid(docid)
-        doc = self.res.get(docid, **params).json_body
+        if isinstance(docid, six.text_type):
+            docid = docid.encode('utf-8')
+        doc = Document(self.cloudant_database, docid)
+        try:
+            doc.fetch()
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                raise ResourceNotFound
+            raise
         if wrapper is not None:
             if not callable(wrapper):
                 raise TypeError("wrapper isn't a callable")
