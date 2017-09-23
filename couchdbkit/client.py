@@ -36,6 +36,7 @@ from itertools import groupby
 from mimetypes import guess_type
 import time
 
+import cloudant
 from cloudant.client import CouchDB
 from cloudant.database import CouchDatabase
 from cloudant.document import Document
@@ -134,8 +135,7 @@ class Server(object):
         """ get list of databases in CouchDb host
 
         """
-        resp = self._request_session.get(urljoin(self.uri, '/_all_dbs'))
-        return resp.json()
+        return self.cloudant_client.all_dbs()
 
     def get_db(self, dbname, **params):
         """
@@ -185,15 +185,10 @@ class Server(object):
         http://wiki.apache.org/couchdb/Replication
 
         """
-        payload = {
-            "source": source,
-            "target": target,
-        }
-        payload.update(params)
-        resp = self._request_session.post(
-            urljoin(self.uri, '/_replicate'), payload=payload
-        )
-        return resp.json()
+        replicator = cloudant.replicator.Replication(self.cloudant_client)
+        source_db = Database(self.cloudant_client, source)
+        target_db = Database(self.cloudant_client, target)
+        return replicator.create_replication(source_db, target_db, **params)
 
     def active_tasks(self):
         """ return active tasks """
@@ -328,11 +323,7 @@ class Database(object):
         return res.json()
 
     def view_cleanup(self):
-        res = self._request_session.post(
-            self._database_path(self.database_url, '_view_cleanup'),
-            headers={"Content-Type": "application/json"}
-        )
-        return res.json()
+        return self.cloudant_database.view_cleanup()
 
     def flush(self):
         """ Remove all docs from a database
@@ -379,8 +370,8 @@ class Database(object):
         @return: boolean, True if document exist
         """
 
-        resp = self._request_session.head(self._database_path(resource.escape_docid(docid)))
-        return resp.status_code != 404
+        doc = Document(self.cloudant_database, docid)
+        return doc.exists()
 
     def open_doc(self, docid, **params):
         """Get document from database
