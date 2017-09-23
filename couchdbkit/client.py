@@ -192,7 +192,6 @@ class Server(object):
 
     def active_tasks(self):
         """ return active tasks """
-        resp = self.res.get('/_active_tasks')
         resp = self._request_session.get(urljoin(self.uri, '/_active_tasks'))
         return resp.json()
 
