@@ -541,15 +541,11 @@ class Database(object):
             doc.update(doc1)
         return res
 
-    def save_docs(self, docs, use_uuids=True, all_or_nothing=False, new_edits=None,
-            **params):
+    def save_docs(self, docs, use_uuids=True, new_edits=None, **params):
         """ bulk save. Modify Multiple Documents With a Single Request
 
         @param docs: list of docs
         @param use_uuids: add _id in doc who don't have it already set.
-        @param all_or_nothing: In the case of a power failure, when the database
-        restarts either all the changes will have been saved or none of them.
-        However, it does not do conflict checking, so the documents will
         @param new_edits: When False, this saves existing revisions instead of
         creating new ones. Used in the replication Algorithm. Each document
         should have a _revisions property that lists its revision history.
@@ -583,8 +579,6 @@ class Database(object):
                     doc['_id'] = nextid
 
         payload = { "docs": docs1 }
-        if all_or_nothing:
-            payload["all_or_nothing"] = True
         if new_edits is not None:
             payload["new_edits"] = new_edits
 
@@ -618,17 +612,13 @@ class Database(object):
         return results
     bulk_save = save_docs
 
-    def delete_docs(self, docs, all_or_nothing=False,
-            empty_on_delete=False, **params):
+    def delete_docs(self, docs, empty_on_delete=False, **params):
         """ bulk delete.
         It adds '_deleted' member to doc then uses bulk_save to save them.
 
         @param empty_on_delete: default is False if you want to make
         sure the doc is emptied and will not be stored as is in Apache
         CouchDB.
-        @param all_or_nothing: In the case of a power failure, when the database
-        restarts either all the changes will have been saved or none of them.
-        However, it does not do conflict checking, so the documents will
 
         .. seealso:: `HTTP Bulk Document API <http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API>`
 
@@ -646,8 +636,7 @@ class Database(object):
             for doc in docs:
                 doc['_deleted'] = True
 
-        return self.bulk_save(docs, use_uuids=False,
-                all_or_nothing=all_or_nothing, **params)
+        return self.bulk_save(docs, use_uuids=False, **params)
 
     bulk_delete = delete_docs
 

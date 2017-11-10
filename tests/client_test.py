@@ -497,61 +497,6 @@ class ClientDatabaseTestCase(unittest.TestCase):
 
         del self.Server['couchdbkit_test']
 
-    def testMultipleDocCOnflict(self):
-        db = self.Server.create_db('couchdbkit_test')
-        docs = [
-                { 'string': 'test', 'number': 4 },
-                { 'string': 'test', 'number': 5 },
-                { 'string': 'test', 'number': 4 },
-                { 'string': 'test', 'number': 6 }
-        ]
-        db.bulk_save(docs)
-        self.assert_(len(db) == 4)
-        docs1 = [
-                docs[0],
-                docs[1],
-                {'_id': docs[2]['_id'], 'string': 'test', 'number': 4 },
-                {'_id': docs[3]['_id'], 'string': 'test', 'number': 6 }
-        ]
-
-        self.assertRaises(BulkSaveError, db.bulk_save, docs1)
-
-        docs2 = [
-            docs1[0],
-            docs1[1],
-            {'_id': docs[2]['_id'], 'string': 'test', 'number': 4 },
-            {'_id': docs[3]['_id'], 'string': 'test', 'number': 6 }
-        ]
-        doc23 = docs2[3].copy()
-        all_errors = []
-        try:
-            db.bulk_save(docs2)
-        except BulkSaveError, e:
-            all_errors = e.errors
-
-        self.assert_(len(all_errors) == 2)
-        self.assert_(all_errors[0]['error'] == 'conflict')
-        self.assert_(doc23 == docs2[3])
-
-        docs3 = [
-            docs2[0],
-            docs2[1],
-            {'_id': docs[2]['_id'], 'string': 'test', 'number': 4 },
-            {'_id': docs[3]['_id'], 'string': 'test', 'number': 6 }
-        ]
-
-        doc33 = docs3[3].copy()
-        all_errors2 = []
-        try:
-            db.bulk_save(docs3, all_or_nothing=True)
-        except BulkSaveError, e:
-            all_errors2 = e.errors
-
-        self.assert_(len(all_errors2) == 0)
-        self.assert_(doc33 != docs3[3])
-        del self.Server['couchdbkit_test']
-
-
     def testCopy(self):
         db = self.Server.create_db('couchdbkit_test')
         doc = { "f": "a" }
