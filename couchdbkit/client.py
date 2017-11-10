@@ -720,10 +720,6 @@ class Database(object):
         else:
             return self.res.get(view_path, **params)
 
-    def raw_temp_view(db, design, params):
-        return db.res.post('_temp_view', payload=design,
-               headers={"Content-Type": "application/json"}, **params)
-
     def view(self, view_name, schema=None, wrapper=None, **params):
         """ get view results from database. viewname is generally
         a string like `designname/viewname". It return an ViewResults
@@ -755,10 +751,6 @@ class Database(object):
             view_path = '_design/%s/_view/%s' % (dname, vname)
 
         return ViewResults(self.raw_view, view_path, wrapper, schema, params)
-
-    def temp_view(self, design, schema=None, wrapper=None, **params):
-        """ get adhoc view results. Like view it reeturn a ViewResult object."""
-        return ViewResults(self.raw_temp_view, design, wrapper, schema, params)
 
     def search( self, view_name, handler='_fti/_design', wrapper=None, schema=None, **params):
         """ Search. Return results from search. Use couchdb-lucene

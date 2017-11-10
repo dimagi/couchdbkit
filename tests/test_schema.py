@@ -530,31 +530,6 @@ class DocumentTestCase(unittest.TestCase):
         self.assert_(len(results) == 2)
         self.server.delete_db('couchdbkit_test')
 
-
-    def testTempView(self):
-        class TestDoc(Document):
-            field1 = StringProperty()
-            field2 = StringProperty()
-
-        design_doc = {
-            "map": """function(doc) { if (doc.doc_type == "TestDoc") { emit(doc._id, doc);
-}}"""
-        }
-
-        doc = TestDoc(field1="a", field2="b")
-        doc1 = TestDoc(field1="c", field2="d")
-
-        db = self.server.create_db('couchdbkit_test')
-        TestDoc._db = db
-
-        doc.save()
-        doc1.save()
-        results = TestDoc.temp_view(design_doc)
-        self.assert_(len(results) == 2)
-        doc3 = list(results)[0]
-        self.assert_(hasattr(doc3, "field1"))
-        self.server.delete_db('couchdbkit_test')
-
     def testDocumentAttachments(self):
         db = self.server.create_db('couchdbkit_test')
 

@@ -301,35 +301,15 @@ class QueryMixin(object):
             dynamic_properties=dynamic_properties, wrap_doc=wrap_doc,
             wrapper=wrapper, schema=classes, **params)
 
-    @classmethod
-    def temp_view(cls, design, wrapper=None, dynamic_properties=None,
-    wrap_doc=True, classes=None, **params):
-        """ Slow view. Like in view method,
-        results are automatically wrapped to
-        Document object.
-
-        @params design: design object, See `simplecouchd.client.Database`
-        @dynamic_properties: do we handle properties which aren't in
-            the schema ?
-        @wrap_doc: If True, if a doc is present in the row it will be
-            used for wrapping. Default is True.
-        @params params:  params of view
-
-        @return: Like view, return a :class:`simplecouchdb.core.ViewResults`
-        instance. All results are wrapped to current document instance.
-        """
-        db = cls.get_db()
-        return db.temp_view(design,
-            dynamic_properties=dynamic_properties, wrap_doc=wrap_doc,
-            wrapper=wrapper, schema=classes or cls, **params)
 
 class Document(DocumentBase, QueryMixin, AttachmentMixin):
     """
     Full featured document object implementing the following :
 
-    :class:`QueryMixin` for view & temp_view that wrap results to this object
+    :class:`QueryMixin` for view that wrap results to this object
     :class `AttachmentMixin` for attachments function
     """
+
 
 class StaticDocument(Document):
     """

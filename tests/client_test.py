@@ -637,26 +637,6 @@ class ClientViewTestCase(unittest.TestCase):
         self.assert_(count == 2)
         del self.Server['couchdbkit_test']
 
-    def testTemporaryView(self):
-        db = self.Server.create_db('couchdbkit_test')
-        # save 2 docs
-        doc1 = { '_id': 'test', 'string': 'test', 'number': 4,
-                'docType': 'test' }
-        db.save_doc(doc1)
-        doc2 = { '_id': 'test2', 'string': 'test', 'number': 2,
-                    'docType': 'test'}
-        db.save_doc(doc2)
-
-        design_doc = {
-            "map": """function(doc) { if (doc.docType == "test") { emit(doc._id, doc);
-}}"""
-        }
-
-        results = db.temp_view(design_doc)
-        self.assert_(len(results) == 2)
-        del self.Server['couchdbkit_test']
-
-
     def testView2(self):
         db = self.Server.create_db('couchdbkit_test')
         # save 2 docs
