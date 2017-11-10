@@ -16,7 +16,7 @@ before_script:
     klaemo/couchdb:2.0-dev \
     --with-admin-party-please \
     --with-haproxy
-    -n 3"
+    -n 1"
   - |
     while :
     do
