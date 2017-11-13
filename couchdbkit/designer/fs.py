@@ -86,13 +86,18 @@ class FSDoc(object):
     def push(self, dbs, atomic=True, force=False):
         """Push a doc to a list of database `dburls`. If noatomic is true
         each attachments will be sent one by one."""
+        pushed = False
         for db in dbs:
+            db_push = False
             if atomic:
                 doc = self.doc(db, force=force)
-                db.save_doc(doc, force_update=True)
+                if not self._compare_with_current_version(db, doc):
+                    db_push = True
+                    db.save_doc(doc, force_update=True)
             else:
                 doc = self.doc(db, with_attachments=False, force=force)
                 db.save_doc(doc, force_update=True)
+                db_push = True
 
                 attachments = doc.get('_attachments') or {}
 
@@ -102,9 +107,23 @@ class FSDoc(object):
                         db.put_attachment(doc, open(filepath, "r"),
                                             name=name)
 
-            logger.debug("%s/%s had been pushed from %s" % (db.uri,
-                self.docid, self.docdir))
+            if db_push:
+                logger.debug("%s/%s had been pushed from %s" % (db.uri,
+                    self.docid, self.docdir))
+            pushed |= db_push
+        return pushed
 
+    def _compare_with_current_version(self, db, doc):
+        """:returns: True if docs match otherwise False"""
+        try:
+            olddoc = db.open_doc(self._doc['_id'])
+        except ResourceNotFound:
+            return False
+
+        if '_attachments' not in olddoc:
+            olddoc['_attachments'] = {}
+
+        return doc == olddoc
 
     def attachment_stub(self, name, filepath):
         att = {}
@@ -391,10 +410,12 @@ def push(path, dbs, atomic=True, force=False, docid=None):
         dbs = [dbs]
 
     doc = document(path, create=False, docid=docid)
-    doc.push(dbs, atomic=atomic, force=force)
+    pushed = doc.push(dbs, atomic=atomic, force=force)
     docspath = os.path.join(path, '_docs')
     if os.path.exists(docspath):
+        pushed = True
         pushdocs(docspath, dbs, atomic=atomic)
+    return pushed
 
 def pushapps(path, dbs, atomic=True, export=False, couchapprc=False):
     """ push all couchapps in one folder like couchapp pushapps command
