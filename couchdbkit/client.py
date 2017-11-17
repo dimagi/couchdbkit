@@ -725,7 +725,7 @@ class Database(object):
         if isinstance(doc1, basestring):
             docid = doc1
         else:
-            if not '_id' in doc1:
+            if '_id' not in doc1:
                 raise KeyError('_id is required to copy a doc')
             docid = doc1['_id']
 
@@ -745,10 +745,11 @@ class Database(object):
 
         if destination:
             headers.update({"Destination": str(destination)})
-            result = self.res.copy('/%s' % docid, headers=headers).json_body
-            return result
+            resp = self._request_session.request('copy', self._database_path(docid), headers=headers)
+            resp.raise_for_status()
+            return resp.json()
 
-        return { 'ok': False }
+        return {'ok': False}
 
     def raw_view(self, view_path, params):
         if 'keys' in params:
