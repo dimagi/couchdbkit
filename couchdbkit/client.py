@@ -26,11 +26,6 @@ Example:
     >>> del server['simplecouchdb_test']
 
 """
-from couchdbkit.logging import error_logger
-
-UNKOWN_INFO = {}
-
-
 from collections import deque
 from copy import deepcopy
 from itertools import groupby
@@ -46,10 +41,11 @@ from cloudant.security_document import SecurityDocument
 from requests.exceptions import HTTPError
 from restkit.util import url_quote
 import six
-from six.moves.urllib.parse import quote, urljoin, unquote
+from six.moves.urllib.parse import urljoin, unquote
 
+from couchdbkit.logging import error_logger
 from .exceptions import InvalidAttachment, NoResultFound, \
-ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound
+        ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound
 from . import resource
 from .utils import validate_dbname
 
@@ -57,6 +53,7 @@ from .schema.util import maybe_schema_wrapper
 
 
 DEFAULT_UUID_BATCH_COUNT = 1000
+UNKOWN_INFO = {}
 
 
 def _maybe_serialize(doc):
