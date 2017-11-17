@@ -917,9 +917,8 @@ class Database(object):
 
     def ensure_full_commit(self):
         """ commit all docs in memory """
-        res = self._request_session.post(
-            '_ensure_full_commit', headers={"Content-Type": "application/json"}
-        )
+        path = self._database_path('_ensure_full_commit')
+        res = self._request_session.post(path, headers={"Content-Type": "application/json"})
         return res.json()
 
     def __len__(self):
