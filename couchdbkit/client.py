@@ -34,6 +34,7 @@ UNKOWN_INFO = {}
 from collections import deque
 from copy import deepcopy
 from itertools import groupby
+import json
 from mimetypes import guess_type
 import time
 
@@ -605,15 +606,14 @@ class Database(object):
                 if nextid:
                     doc['_id'] = nextid
 
-        payload = { "docs": docs1 }
-        if all_or_nothing:
-            payload["all_or_nothing"] = True
+        payload = {"docs": docs1}
         if new_edits is not None:
             payload["new_edits"] = new_edits
 
         # update docs
-        results = self.res.post('/_bulk_docs',
-                payload=payload, **params).json_body
+        results = self._request_session.post(
+            self._database_path('_bulk_docs'), data=json.dumps(payload),
+            headers={"Content-Type": "application/json"}, **params).json()
 
         errors = []
         for i, res in enumerate(results):
