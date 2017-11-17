@@ -32,6 +32,7 @@ UNKOWN_INFO = {}
 
 
 from collections import deque
+from copy import deepcopy
 from itertools import groupby
 from mimetypes import guess_type
 import time
@@ -532,18 +533,22 @@ class Database(object):
             doc1['_attachments'] = resource.encode_attachments(doc['_attachments'])
 
         if '_id' in doc1:
-            docid = doc1['_id']
-            docid1 = resource.escape_docid(doc1['_id'])
+            docid = doc1['_id'].encode('utf-8')
+            couch_doc = Document(self.cloudant_database, docid)
+            couch_doc.update(doc1)
             try:
-                res = self.res.put(docid1, payload=doc1,
-                        **params).json_body
-            except ResourceConflict:
-                if force_update:
-                    doc1['_rev'] = self.get_rev(docid)
-                    res =self.res.put(docid1, payload=doc1,
-                            **params).json_body
-                else:
+                couch_doc.save()
+            except HTTPError as e:
+                if e.response.status_code != 409:
                     raise
+
+                if force_update:
+                    couch_doc['_rev'] = self.get_rev(docid)
+                    couch_doc.save()
+                else:
+                    raise ResourceConflict
+
+            res = deepcopy(couch_doc)
         else:
             res = self.cloudant_database.create_document(doc1)
 
