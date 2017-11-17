@@ -502,8 +502,8 @@ class Database(object):
 
         @return rev: str, the last revision of document.
         """
-        response = self.res.head(resource.escape_docid(docid))
-        return response['etag'].strip('"')
+        response = self._request_session.head(self._database_path(docid))
+        return response.headers['ETag'].strip('"')
 
     def save_doc(self, doc, encode_attachments=True, force_update=False,
             **params):
