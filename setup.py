@@ -53,6 +53,7 @@ setup(
         'restkit>=4.2.2',
         'jsonobject>=0.6.0',
         'cloudant==2.7.0',
+        'six==1.11.0',
     ],
     provides=['couchdbkit'],
     obsoletes=['couchdbkit'],
