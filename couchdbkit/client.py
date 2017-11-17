@@ -56,6 +56,7 @@ from .schema.util import maybe_schema_wrapper
 
 DEFAULT_UUID_BATCH_COUNT = 1000
 
+
 def _maybe_serialize(doc):
     if hasattr(doc, "to_json"):
         # try to validate doc first
@@ -69,6 +70,7 @@ def _maybe_serialize(doc):
         return doc.copy(), False
 
     return doc, False
+
 
 class Server(object):
     """ Server object that allows you to access and manage a couchdb node.
@@ -244,6 +246,7 @@ class Server(object):
 
         dbname = url_quote(dbname, safe=":")
         return "/".join([self.uri, dbname])
+
 
 class Database(object):
     """ Object that abstract access to a CouchDB database
@@ -542,17 +545,12 @@ class Database(object):
                 else:
                     raise
         else:
-            try:
-                doc['_id'] = self.server.next_uuid()
-                res =  self.res.put(doc['_id'], payload=doc1,
-                        **params).json_body
-            except:
-                res = self.res.post(payload=doc1, **params).json_body
+            res = self.cloudant_database.create_document(doc1)
 
-        if 'batch' in params and 'id' in res:
-            doc1.update({ '_id': res['id']})
+        if 'batch' in params and ('id' in res or '_id' in res):
+            doc1.update({ '_id': res.get('id', res.get('_id'))})
         else:
-            doc1.update({'_id': res['id'], '_rev': res['rev']})
+            doc1.update({'_id': res.get('id', res.get('_id')), '_rev': res.get('rev', res.get('_rev'))})
 
         if schema:
             for key, value in doc.__class__.wrap(doc1).iteritems():
@@ -806,8 +804,6 @@ class Database(object):
                 wrapper=wrapper, schema=schema, params=params)
     iterdocuments = documents
 
-
-
     def put_attachment(self, doc, content, name=None, content_type=None,
             content_length=None, headers=None):
         """ Add attachement to a document. All attachments are streamed.
@@ -847,11 +843,13 @@ class Database(object):
         if not content:
             content = ""
             content_length = 0
+
         if name is None:
             if hasattr(content, "name"):
                 name = content.name
             else:
                 raise InvalidAttachment('You should provide a valid attachment name')
+
         name = url_quote(name, safe="")
         if content_type is None:
             content_type = ';'.join(filter(None, guess_type(name)))
@@ -860,7 +858,7 @@ class Database(object):
             headers['Content-Type'] = content_type
 
         # add appropriate headers
-        if content_length and content_length is not None:
+        if content_length:
             headers['Content-Length'] = content_length
 
         doc1, schema = _maybe_serialize(doc)
