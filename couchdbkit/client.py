@@ -554,9 +554,9 @@ class Database(object):
             res = self.cloudant_database.create_document(doc1)
 
         if 'batch' in params and ('id' in res or '_id' in res):
-            doc1.update({ '_id': res.get('id', res.get('_id'))})
+            doc1.update({ '_id': res.get('_id')})
         else:
-            doc1.update({'_id': res.get('id', res.get('_id')), '_rev': res.get('rev', res.get('_rev'))})
+            doc1.update({'_id': res.get('_id'), '_rev': res.get('_rev')})
 
         if schema:
             for key, value in doc.__class__.wrap(doc1).iteritems():
