@@ -25,4 +25,5 @@ couchdbkit.egg-info
 dist/
 doc/_build/
 distribute-*
+data
 jsonobject_couchdbkit.egg-info

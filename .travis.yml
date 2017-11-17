@@ -1,12 +1,28 @@
 language: python
 
 services:
-    - couchdb
+  - docker
 
 python: 2.7
 
-install: 
-    - pip install -r requirements_dev.txt
-    - python setup.py install
+install:
+  - pip install -r requirements_dev.txt
+  - python setup.py install
+
+before_script:
+  - "docker run -d --name couchdb-cluster \
+    -p 5984:5984 \
+    -v $(pwd)/data:/usr/src/couchdb/dev/lib/ \
+    klaemo/couchdb:2.0-dev \
+    --with-admin-party-please \
+    --with-haproxy
+    -n 1"
+  - |
+    while :
+    do
+      curl http://localhost:5984/${db_name} -sv 2>&1 | grep '^< HTTP/.* 200 OK' && break || continue
+      sleep 1
+    done
+
 
 script: python setup.py test

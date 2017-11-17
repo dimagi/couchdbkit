@@ -15,6 +15,7 @@ except ImportError:
 from couchdbkit import *
 from couchdbkit.schema.properties import support_setproperty
 
+
 class DocumentTestCase(unittest.TestCase):
     def setUp(self):
         self.server = Server()
@@ -530,31 +531,6 @@ class DocumentTestCase(unittest.TestCase):
         self.assert_(len(results) == 2)
         self.server.delete_db('couchdbkit_test')
 
-
-    def testTempView(self):
-        class TestDoc(Document):
-            field1 = StringProperty()
-            field2 = StringProperty()
-
-        design_doc = {
-            "map": """function(doc) { if (doc.doc_type == "TestDoc") { emit(doc._id, doc);
-}}"""
-        }
-
-        doc = TestDoc(field1="a", field2="b")
-        doc1 = TestDoc(field1="c", field2="d")
-
-        db = self.server.create_db('couchdbkit_test')
-        TestDoc._db = db
-
-        doc.save()
-        doc1.save()
-        results = TestDoc.temp_view(design_doc)
-        self.assert_(len(results) == 2)
-        doc3 = list(results)[0]
-        self.assert_(hasattr(doc3, "field1"))
-        self.server.delete_db('couchdbkit_test')
-
     def testDocumentAttachments(self):
         db = self.server.create_db('couchdbkit_test')
 
@@ -740,8 +716,6 @@ class PropertyTestCase(unittest.TestCase):
             value = test.field
             self.assert_(isinstance(value, datetime.datetime))
 
-
-
     def testDateProperty(self):
         class Test(Document):
             field = DateProperty()
@@ -755,7 +729,6 @@ class PropertyTestCase(unittest.TestCase):
         self.assert_(test._doc['field'] == "2008-11-10")
         value = test.field
         self.assert_(isinstance(value, datetime.date))
-
 
     def testTimeProperty(self):
         class Test(Document):
@@ -814,7 +787,6 @@ class PropertyTestCase(unittest.TestCase):
         self.assert_(isinstance(v1, datetime.datetime))
         self.assert_(isinstance(vd, basestring))
 
-
     def testSchemaProperty1(self):
         class MySchema(DocumentSchema):
             astring = StringProperty()
@@ -837,7 +809,6 @@ class PropertyTestCase(unittest.TestCase):
         self.assert_(isinstance(doc2.schema, MySchema) == True)
         self.assert_(doc2.schema.astring == u"test")
         self.assert_(doc2._doc['schema']['astring'] == u"test")
-
 
     def testSchemaPropertyWithRequired(self):
         class B( Document ):
@@ -1067,7 +1038,6 @@ class PropertyTestCase(unittest.TestCase):
         self.assert_(len(b1.slm) == 2)
         self.assert_(b1.slm[0].s == "test")
 
-
     def testSchemaListPropertySlice(self):
         """SchemaListProperty slice methods
         """
@@ -1104,7 +1074,6 @@ class PropertyTestCase(unittest.TestCase):
             'slm': [{'doc_type': 'A', 's': unicode(a1.s)}]
         })
 
-
     def testSchemaListPropertyContains(self):
         """SchemaListProperty contains method
         """
@@ -1123,7 +1092,6 @@ class PropertyTestCase(unittest.TestCase):
         self.assertTrue(a1 in b.slm)
         self.assertFalse(a2 in b.slm)
 
-
     def testSchemaListPropertyCount(self):
         """SchemaListProperty count method
         """
@@ -1140,7 +1108,6 @@ class PropertyTestCase(unittest.TestCase):
         a2.s = 'test2'
         b.slm = [a1, a2, a1]
         self.assertEqual(b.slm.count(a1), 2)
-
 
     def testSchemaListPropertyExtend(self):
         """SchemaListProperty extend method
@@ -1221,7 +1188,6 @@ class PropertyTestCase(unittest.TestCase):
                     {'doc_type': 'A', 's': unicode(a3.s)}]
         })
 
-
     def testSchemaListPropertyPop(self):
         """SchemaListProperty pop method
         """
@@ -1256,7 +1222,6 @@ class PropertyTestCase(unittest.TestCase):
             'doc_type': 'B',
             'slm': [{'doc_type': 'A', 's': unicode(a2.s)}]
         })
-
 
     def testSchemaListPropertyRemove(self):
         """SchemaListProperty remove method
@@ -1310,7 +1275,6 @@ class PropertyTestCase(unittest.TestCase):
                     {'doc_type': 'A', 's': unicode(a1.s)}]
         })
 
-
     def testSchemaListPropertySort(self):
         """SchemaListProperty sort method
         """
@@ -1348,7 +1312,6 @@ class PropertyTestCase(unittest.TestCase):
                     {'doc_type': 'A', 's': unicode(a2.s)}]
         })
 
-
     def testSchemaDictProperty(self):
         class A(DocumentSchema):
             i = IntegerProperty()
@@ -1376,7 +1339,6 @@ class PropertyTestCase(unittest.TestCase):
         self.assert_(len(b1.d) == 2)
         self.assert_(b1.d['v1'].i == 123)
         self.assert_(b1.d[23].i == 42)
-
 
     def testListProperty(self):
         from datetime import datetime
@@ -1456,7 +1418,6 @@ class PropertyTestCase(unittest.TestCase):
         b1.ls.remove(u'hello')
         self.assert_(u'hello' not in b1.ls)
 
-
     def testListPropertyExtend(self):
         """list extend method for property w/o type
         """
@@ -1467,7 +1428,6 @@ class PropertyTestCase(unittest.TestCase):
         a.l.extend([42, 24])
         self.assert_(a.l == [42, 24])
         self.assert_(a._doc == {'doc_type': 'A', 'l': [42, 24]})
-
 
     def testListPropertyExtendWithType(self):
         """list extend method for property w/ type
@@ -1486,7 +1446,6 @@ class PropertyTestCase(unittest.TestCase):
             'l': ['2011-03-11T21:31:01Z', '2011-11-03T13:12:02Z']
         })
 
-
     def testListPropertyInsert(self):
         """list insert method for property w/o type
         """
@@ -1498,7 +1457,6 @@ class PropertyTestCase(unittest.TestCase):
         a.l.insert(1, 4224)
         self.assertEqual(a.l, [42, 4224, 24])
         self.assertEqual(a._doc, {'doc_type': 'A', 'l': [42, 4224, 24]})
-
 
     def testListPropertyInsertWithType(self):
         """list insert method for property w/ type
@@ -1521,7 +1479,6 @@ class PropertyTestCase(unittest.TestCase):
                   '2010-01-12T03:02:03Z']
         })
 
-
     def testListPropertyPop(self):
         """list pop method for property w/o type
         """
@@ -1539,7 +1496,6 @@ class PropertyTestCase(unittest.TestCase):
         self.assert_(a.l == [24])
         self.assert_(a._doc == {'doc_type': 'A', 'l': [24]})
 
-
     def testListPropertyPopWithType(self):
         """list pop method for property w/ type
         """
@@ -1555,7 +1511,6 @@ class PropertyTestCase(unittest.TestCase):
         v = a.l.pop()
         self.assertEqual(v, d3)
         self.assertEqual(a.l, [d1, d2])
-
 
     def testDictProperty(self):
         from datetime import datetime
@@ -1823,7 +1778,6 @@ class PropertyTestCase(unittest.TestCase):
         b.d = {}
         self.assert_(b.d == {})
         self.assert_(b.to_json()['d'] == {})
-
 
 
 if support_setproperty:
