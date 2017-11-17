@@ -413,60 +413,60 @@ class Database(object):
         return doc
     get = open_doc
 
-    def list(self, list_name, view_name, **params):
-        """ Execute a list function on the server and return the response.
-        If the response is json it will be deserialized, otherwise the string
-        will be returned.
+    # def list(self, list_name, view_name, **params):
+    #     """ Execute a list function on the server and return the response.
+    #     If the response is json it will be deserialized, otherwise the string
+    #     will be returned.
+    #
+    #     Args:
+    #         @param list_name: should be 'designname/listname'
+    #         @param view_name: name of the view to run through the list document
+    #         @param params: params of the list
+    #     """
+    #     list_name = list_name.split('/')
+    #     dname = list_name.pop(0)
+    #     vname = '/'.join(list_name)
+    #     list_path = '_design/%s/_list/%s/%s' % (dname, vname, view_name)
+    #
+    #     return self.res.get(list_path, **params).json_body
 
-        Args:
-            @param list_name: should be 'designname/listname'
-            @param view_name: name of the view to run through the list document
-            @param params: params of the list
-        """
-        list_name = list_name.split('/')
-        dname = list_name.pop(0)
-        vname = '/'.join(list_name)
-        list_path = '_design/%s/_list/%s/%s' % (dname, vname, view_name)
+    # def show(self, show_name, doc_id, **params):
+    #     """ Execute a show function on the server and return the response.
+    #     If the response is json it will be deserialized, otherwise the string
+    #     will be returned.
+    #
+    #     Args:
+    #         @param show_name: should be 'designname/showname'
+    #         @param doc_id: id of the document to pass into the show document
+    #         @param params: params of the show
+    #     """
+    #     show_name = show_name.split('/')
+    #     dname = show_name.pop(0)
+    #     vname = '/'.join(show_name)
+    #     show_path = '_design/%s/_show/%s/%s' % (dname, vname, doc_id)
+    #
+    #     return self.res.get(show_path, **params).json_body
 
-        return self.res.get(list_path, **params).json_body
-
-    def show(self, show_name, doc_id, **params):
-        """ Execute a show function on the server and return the response.
-        If the response is json it will be deserialized, otherwise the string
-        will be returned.
-
-        Args:
-            @param show_name: should be 'designname/showname'
-            @param doc_id: id of the document to pass into the show document
-            @param params: params of the show
-        """
-        show_name = show_name.split('/')
-        dname = show_name.pop(0)
-        vname = '/'.join(show_name)
-        show_path = '_design/%s/_show/%s/%s' % (dname, vname, doc_id)
-
-        return self.res.get(show_path, **params).json_body
-
-    def update(self, update_name, doc_id=None, **params):
-        """ Execute update function on the server and return the response.
-        If the response is json it will be deserialized, otherwise the string
-        will be returned.
-
-        Args:
-            @param update_name: should be 'designname/updatename'
-            @param doc_id: id of the document to pass into the update function
-            @param params: params of the update
-        """
-        update_name = update_name.split('/')
-        dname = update_name.pop(0)
-        uname = '/'.join(update_name)
-
-        if doc_id is None:
-            update_path = '_design/%s/_update/%s' % (dname, uname)
-            return self.res.post(update_path, **params).json_body
-        else:
-            update_path = '_design/%s/_update/%s/%s' % (dname, uname, doc_id)
-            return self.res.put(update_path, **params).json_body
+    # def update(self, update_name, doc_id=None, **params):
+    #     """ Execute update function on the server and return the response.
+    #     If the response is json it will be deserialized, otherwise the string
+    #     will be returned.
+    #
+    #     Args:
+    #         @param update_name: should be 'designname/updatename'
+    #         @param doc_id: id of the document to pass into the update function
+    #         @param params: params of the update
+    #     """
+    #     update_name = update_name.split('/')
+    #     dname = update_name.pop(0)
+    #     uname = '/'.join(update_name)
+    #
+    #     if doc_id is None:
+    #         update_path = '_design/%s/_update/%s' % (dname, uname)
+    #         return self.res.post(update_path, **params).json_body
+    #     else:
+    #         update_path = '_design/%s/_update/%s/%s' % (dname, uname, doc_id)
+    #         return self.res.put(update_path, **params).json_body
 
     def all_docs(self, by_seq=False, **params):
         """Get all documents from a database
@@ -918,7 +918,6 @@ class Database(object):
         if stream:
             return resp.body_stream()
         return resp.body_string(charset="utf-8")
-
 
     def ensure_full_commit(self):
         """ commit all docs in memory """
