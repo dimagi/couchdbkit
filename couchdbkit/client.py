@@ -32,7 +32,9 @@ UNKOWN_INFO = {}
 
 
 from collections import deque
+from copy import deepcopy
 from itertools import groupby
+import json
 from mimetypes import guess_type
 import time
 
@@ -56,6 +58,7 @@ from .schema.util import maybe_schema_wrapper
 
 DEFAULT_UUID_BATCH_COUNT = 1000
 
+
 def _maybe_serialize(doc):
     if hasattr(doc, "to_json"):
         # try to validate doc first
@@ -69,6 +72,7 @@ def _maybe_serialize(doc):
         return doc.copy(), False
 
     return doc, False
+
 
 class Server(object):
     """ Server object that allows you to access and manage a couchdb node.
@@ -245,6 +249,7 @@ class Server(object):
 
         dbname = url_quote(dbname, safe=":")
         return "/".join([self.uri, dbname])
+
 
 class Database(object):
     """ Object that abstract access to a CouchDB database
@@ -529,30 +534,28 @@ class Database(object):
             doc1['_attachments'] = resource.encode_attachments(doc['_attachments'])
 
         if '_id' in doc1:
-            docid = doc1['_id']
-            docid1 = resource.escape_docid(doc1['_id'])
+            docid = doc1['_id'].encode('utf-8')
+            couch_doc = Document(self.cloudant_database, docid)
+            couch_doc.update(doc1)
             try:
-                res = self.res.put(docid1, payload=doc1,
-                        **params).json_body
-            except ResourceConflict:
-                if force_update:
-                    doc1['_rev'] = self.get_rev(docid)
-                    res =self.res.put(docid1, payload=doc1,
-                            **params).json_body
-                else:
+                couch_doc.save()
+            except HTTPError as e:
+                if e.response.status_code != 409:
                     raise
-        else:
-            try:
-                doc['_id'] = self.server.next_uuid()
-                res =  self.res.put(doc['_id'], payload=doc1,
-                        **params).json_body
-            except:
-                res = self.res.post(payload=doc1, **params).json_body
 
-        if 'batch' in params and 'id' in res:
-            doc1.update({ '_id': res['id']})
+                if force_update:
+                    couch_doc['_rev'] = self.get_rev(docid)
+                    couch_doc.save()
+                else:
+                    raise ResourceConflict
+            res = couch_doc
         else:
-            doc1.update({'_id': res['id'], '_rev': res['rev']})
+            res = self.cloudant_database.create_document(doc1)
+
+        if 'batch' in params and ('id' in res or '_id' in res):
+            doc1.update({ '_id': res.get('_id')})
+        else:
+            doc1.update({'_id': res.get('_id'), '_rev': res.get('_rev')})
 
         if schema:
             for key, value in doc.__class__.wrap(doc1).iteritems():
@@ -598,13 +601,14 @@ class Database(object):
                 if nextid:
                     doc['_id'] = nextid
 
-        payload = { "docs": docs1 }
+        payload = {"docs": docs1}
         if new_edits is not None:
             payload["new_edits"] = new_edits
 
         # update docs
-        results = self.res.post('/_bulk_docs',
-                payload=payload, **params).json_body
+        results = self._request_session.post(
+            self._database_path('_bulk_docs'), data=json.dumps(payload),
+            headers={"Content-Type": "application/json"}, **params).json()
 
         errors = []
         for i, res in enumerate(results):
@@ -787,8 +791,6 @@ class Database(object):
                 wrapper=wrapper, schema=schema, params=params)
     iterdocuments = documents
 
-
-
     def put_attachment(self, doc, content, name=None, content_type=None,
             content_length=None, headers=None):
         """ Add attachement to a document. All attachments are streamed.
@@ -828,11 +830,13 @@ class Database(object):
         if not content:
             content = ""
             content_length = 0
+
         if name is None:
             if hasattr(content, "name"):
                 name = content.name
             else:
                 raise InvalidAttachment('You should provide a valid attachment name')
+
         name = url_quote(name, safe="")
         if content_type is None:
             content_type = ';'.join(filter(None, guess_type(name)))
@@ -841,7 +845,7 @@ class Database(object):
             headers['Content-Type'] = content_type
 
         # add appropriate headers
-        if content_length and content_length is not None:
+        if content_length:
             headers['Content-Length'] = content_length
 
         doc1, schema = _maybe_serialize(doc)
