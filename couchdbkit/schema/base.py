@@ -140,33 +140,24 @@ class DocumentBase(DocumentSchema):
     store = save
 
     @classmethod
-    def save_docs(cls, docs, use_uuids=True, all_or_nothing=False):
+    def save_docs(cls, docs, use_uuids=True):
         """ Save multiple documents in database.
 
         @params docs: list of couchdbkit.schema.Document instance
         @param use_uuids: add _id in doc who don't have it already set.
-        @param all_or_nothing: In the case of a power failure, when the database
-        restarts either all the changes will have been saved or none of them.
-        However, it does not do conflict checking, so the documents will
-        be committed even if this creates conflicts.
-
         """
         db = cls.get_db()
         if any(doc._doc_type != cls._doc_type for doc in docs):
             raise ValueError("one of your documents does not have the correct type")
-        db.bulk_save(docs, use_uuids=use_uuids, all_or_nothing=all_or_nothing)
+        db.bulk_save(docs, use_uuids=use_uuids)
 
     bulk_save = save_docs
 
     @classmethod
-    def delete_docs(cls, docs, all_or_nothing=False, empty_on_delete=False):
+    def delete_docs(cls, docs, empty_on_delete=False):
         """ Bulk delete documents in a database
 
         @params docs: list of couchdbkit.schema.Document instance
-        @param all_or_nothing: In the case of a power failure, when the database
-        restarts either all the changes will have been saved or none of them.
-        However, it does not do conflict checking, so the documents will
-        be committed even if this creates conflicts.
         @param empty_on_delete: default is False if you want to make
         sure the doc is emptied and will not be stored as is in Apache
         CouchDB.
@@ -174,8 +165,7 @@ class DocumentBase(DocumentSchema):
         db = cls.get_db()
         if any(doc._doc_type != cls._doc_type for doc in docs):
             raise ValueError("one of your documents does not have the correct type")
-        db.bulk_delete(docs, all_or_nothing=all_or_nothing,
-                       empty_on_delete=empty_on_delete)
+        db.bulk_delete(docs, empty_on_delete=empty_on_delete)
 
     bulk_delete = delete_docs
 
@@ -311,35 +301,15 @@ class QueryMixin(object):
             dynamic_properties=dynamic_properties, wrap_doc=wrap_doc,
             wrapper=wrapper, schema=classes, **params)
 
-    @classmethod
-    def temp_view(cls, design, wrapper=None, dynamic_properties=None,
-    wrap_doc=True, classes=None, **params):
-        """ Slow view. Like in view method,
-        results are automatically wrapped to
-        Document object.
-
-        @params design: design object, See `simplecouchd.client.Database`
-        @dynamic_properties: do we handle properties which aren't in
-            the schema ?
-        @wrap_doc: If True, if a doc is present in the row it will be
-            used for wrapping. Default is True.
-        @params params:  params of view
-
-        @return: Like view, return a :class:`simplecouchdb.core.ViewResults`
-        instance. All results are wrapped to current document instance.
-        """
-        db = cls.get_db()
-        return db.temp_view(design,
-            dynamic_properties=dynamic_properties, wrap_doc=wrap_doc,
-            wrapper=wrapper, schema=classes or cls, **params)
 
 class Document(DocumentBase, QueryMixin, AttachmentMixin):
     """
     Full featured document object implementing the following :
 
-    :class:`QueryMixin` for view & temp_view that wrap results to this object
+    :class:`QueryMixin` for view that wrap results to this object
     :class `AttachmentMixin` for attachments function
     """
+
 
 class StaticDocument(Document):
     """
