@@ -196,10 +196,12 @@ class Server(object):
     def active_tasks(self):
         """ return active tasks """
         resp = self._request_session.get(urljoin(self.uri, '/_active_tasks'))
+        resp.raise_for_status()
         return resp.json()
 
     def uuids(self, count=1):
         resp = self._request_session.get(urljoin(self.uri, '/_uuids'), params={'count': count})
+        resp.raise_for_status()
         return resp.json()
 
     def next_uuid(self, count=None):
@@ -323,6 +325,7 @@ class Database(object):
             path = "%s/%s" % (path, resource.escape_docid(dname))
         path = self._database_path(path)
         res = self._request_session.post(path, headers={"Content-Type": "application/json"})
+        res.raise_for_status()
         return res.json()
 
     def view_cleanup(self):
@@ -503,6 +506,7 @@ class Database(object):
         @return rev: str, the last revision of document.
         """
         response = self._request_session.head(self._database_path(docid))
+        response.raise_for_status()
         return response.headers['ETag'].strip('"')
 
     def save_doc(self, doc, encode_attachments=True, force_update=False,
@@ -603,9 +607,11 @@ class Database(object):
             payload["new_edits"] = new_edits
 
         # update docs
-        results = self._request_session.post(
+        res = self._request_session.post(
             self._database_path('_bulk_docs'), data=json.dumps(payload),
-            headers={"Content-Type": "application/json"}, **params).json()
+            headers={"Content-Type": "application/json"}, **params)
+        res.raise_for_status()
+        results = res.json()
 
         errors = []
         for i, res in enumerate(results):
@@ -685,10 +691,12 @@ class Database(object):
             couch_doc['_rev'] = self.get_rev(doc1)
 
         # manual request because cloudant library doesn't return result
-        result = self._request_session.delete(
+        res = self._request_session.delete(
             couch_doc.document_url,
             params={"rev": couch_doc["_rev"]},
-        ).json()
+        )
+        res.raise_for_status()
+        result = res.json()
 
         if schema:
             doc._doc.update({
@@ -910,6 +918,7 @@ class Database(object):
         """ commit all docs in memory """
         path = self._database_path('_ensure_full_commit')
         res = self._request_session.post(path, headers={"Content-Type": "application/json"})
+        res.raise_for_status()
         return res.json()
 
     def __len__(self):
