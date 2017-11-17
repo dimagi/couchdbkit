@@ -882,11 +882,9 @@ class Database(object):
         """
         doc1, schema = _maybe_serialize(doc)
 
-        docid = resource.escape_docid(doc1['_id'])
         name = url_quote(name, safe="")
-
-        res = self.res(docid).delete(name, rev=doc1['_rev'],
-                headers=headers).json_body
+        couch_doc = Document(self.cloudant_database, doc1['_id'].encode('utf-8'))
+        res = couch_doc.delete_attachment(name, headers)
 
         if res['ok']:
             new_doc = self.get(doc1['_id'], rev=res['rev'])
