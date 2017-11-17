@@ -906,13 +906,14 @@ class Database(object):
             doc, schema = _maybe_serialize(id_or_doc)
             docid = doc['_id']
 
-        docid = resource.escape_docid(docid)
         name = url_quote(name, safe="")
-
-        resp = self.res(docid).get(name, headers=headers)
+        couch_doc = Document(self.cloudant_database, docid.encode('utf-8'))
         if stream:
-            return resp.body_stream()
-        return resp.body_string(charset="utf-8")
+            tmp_file = StringIO()
+            couch_doc.get_attachment(name, headers, write_to=tmp_file)
+            return tmp_file
+
+        return couch_doc.get_attachment(name, headers)
 
     def ensure_full_commit(self):
         """ commit all docs in memory """

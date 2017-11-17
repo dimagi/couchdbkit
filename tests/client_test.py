@@ -3,6 +3,7 @@
 # This file is part of couchdbkit released under the MIT license.
 # See the NOTICE for more information.
 #
+from __future__ import unicode_literals
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import copy
@@ -437,17 +438,16 @@ class ClientDatabaseTestCase(unittest.TestCase):
 
         del self.Server['couchdbkit_test']
 
-
     def testAttachmentUnicode8URI(self):
         db = self.Server.create_db('couchdbkit_test')
-        doc = { '_id': u"éàù/slashes", 'string': 'test', 'number': 4 }
+        doc = {'_id': u"éàù/slashes", 'string': 'test', 'number': 4}
         db.save_doc(doc)
         text_attachment = u"un texte attaché"
         old_rev = doc['_rev']
         db.put_attachment(doc, text_attachment, "test", "text/plain")
-        self.assert_(old_rev != doc['_rev'])
+        self.assertNotEqual(old_rev, doc['_rev'])
         fetch_attachment = db.fetch_attachment(doc, "test")
-        self.assert_(text_attachment == fetch_attachment)
+        self.assertEqual(text_attachment, fetch_attachment)
         del self.Server['couchdbkit_test']
 
     def testSaveMultipleDocs(self):
