@@ -412,7 +412,7 @@ class ClientDatabaseTestCase(unittest.TestCase):
         doc = { 'string': 'test', 'number': 4 }
         db.save_doc(doc)
 
-        text_attachment = "un texte attaché"
+        text_attachment = u"un texte attaché"
         old_rev = doc['_rev']
         db.put_attachment(doc, text_attachment, "test", "text/plain")
         db.delete_attachment(doc, 'test')

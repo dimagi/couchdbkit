@@ -562,7 +562,7 @@ class DocumentTestCase(unittest.TestCase):
         a = A()
         a.save()
 
-        text_attachment = "un texte attaché"
+        text_attachment = u"un texte attaché"
 
         a.put_attachment(text_attachment, "test", "text/plain")
         a.delete_attachment('test')

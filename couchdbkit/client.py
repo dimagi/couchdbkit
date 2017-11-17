@@ -29,6 +29,7 @@ Example:
 from collections import deque
 from copy import deepcopy
 from itertools import groupby
+from io import StringIO
 import json
 from mimetypes import guess_type
 import time
@@ -844,6 +845,10 @@ class Database(object):
         if not content:
             content = ""
             content_length = 0
+        elif isinstance(content, six.string_types):
+            content = content.encode('utf-8')
+        else:
+            content = content.read()
 
         if name is None:
             if hasattr(content, "name"):
@@ -855,19 +860,13 @@ class Database(object):
         if content_type is None:
             content_type = ';'.join(filter(None, guess_type(name)))
 
-        if content_type:
-            headers['Content-Type'] = content_type
-
         # add appropriate headers
         if content_length:
             headers['Content-Length'] = content_length
 
         doc1, schema = _maybe_serialize(doc)
-
-        docid = resource.escape_docid(doc1['_id'])
-        res = self.res(docid).put(name, payload=content,
-                headers=headers, rev=doc1['_rev']).json_body
-
+        couch_doc = Document(self.cloudant_database, doc1['_id'].encode('utf-8'))
+        res = couch_doc.put_attachment(name, content_type, content, headers)
         if res['ok']:
             new_doc = self.get(doc1['_id'], rev=res['rev'])
             doc.update(new_doc)
@@ -888,6 +887,7 @@ class Database(object):
 
         res = self.res(docid).delete(name, rev=doc1['_rev'],
                 headers=headers).json_body
+
         if res['ok']:
             new_doc = self.get(doc1['_id'], rev=res['rev'])
             doc.update(new_doc)
