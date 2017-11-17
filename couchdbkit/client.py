@@ -673,16 +673,22 @@ class Database(object):
         result = { 'ok': False }
 
         doc1, schema = _maybe_serialize(doc)
+
         if isinstance(doc1, dict):
             if not '_id' or not '_rev' in doc1:
                 raise KeyError('_id and _rev are required to delete a doc')
 
-            docid = resource.escape_docid(doc1['_id'])
-            result = self.res.delete(docid, rev=doc1['_rev'], **params).json_body
+            couch_doc = Document(self.cloudant_database, doc1['_id'])
+            couch_doc['_rev'] = doc1['_rev']
         elif isinstance(doc1, basestring): # we get a docid
-            rev = self.get_rev(doc1)
-            docid = resource.escape_docid(doc1)
-            result = self.res.delete(docid, rev=rev, **params).json_body
+            couch_doc = Document(self.cloudant_database, doc1)
+            couch_doc['_rev'] = self.get_rev(doc1)
+
+        # manual request because cloudant library doesn't return result
+        result = self._request_session.delete(
+            couch_doc.document_url,
+            params={"rev": couch_doc["_rev"]},
+        ).json()
 
         if schema:
             doc._doc.update({
