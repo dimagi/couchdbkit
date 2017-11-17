@@ -875,9 +875,7 @@ class Database(object):
             doc.update(new_doc)
         return res['ok']
 
-
-    def fetch_attachment(self, id_or_doc, name, stream=False,
-            headers=None):
+    def fetch_attachment(self, id_or_doc, name, stream=False, headers=None):
         """ get attachment in a document
 
         @param id_or_doc: str or dict, doc id or document dict
@@ -903,9 +901,9 @@ class Database(object):
 
     def ensure_full_commit(self):
         """ commit all docs in memory """
-        return self.res.post('_ensure_full_commit', headers={
-            "Content-Type": "application/json"
-        }).json_body
+        path = self._database_path('_ensure_full_commit')
+        res = self._request_session.post(path, headers={"Content-Type": "application/json"})
+        return res.json()
 
     def __len__(self):
         return self.info()['doc_count']
@@ -920,15 +918,15 @@ class Database(object):
         doc['_id'] = docid
         self.save_doc(doc)
 
-
     def __delitem__(self, docid):
-       self.delete_doc(docid)
+        self.delete_doc(docid)
 
     def __iter__(self):
         return self.documents().iterator()
 
     def __nonzero__(self):
         return (len(self) > 0)
+
 
 class ViewResults(object):
     """
