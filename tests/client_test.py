@@ -3,6 +3,7 @@
 # This file is part of couchdbkit released under the MIT license.
 # See the NOTICE for more information.
 #
+from __future__ import unicode_literals
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import copy
@@ -412,7 +413,7 @@ class ClientDatabaseTestCase(unittest.TestCase):
         doc = { 'string': 'test', 'number': 4 }
         db.save_doc(doc)
 
-        text_attachment = "un texte attaché"
+        text_attachment = u"un texte attaché"
         old_rev = doc['_rev']
         db.put_attachment(doc, text_attachment, "test", "text/plain")
         db.delete_attachment(doc, 'test')
@@ -437,17 +438,16 @@ class ClientDatabaseTestCase(unittest.TestCase):
 
         del self.Server['couchdbkit_test']
 
-
     def testAttachmentUnicode8URI(self):
         db = self.Server.create_db('couchdbkit_test')
-        doc = { '_id': u"éàù/slashes", 'string': 'test', 'number': 4 }
+        doc = {'_id': u"éàù/slashes", 'string': 'test', 'number': 4}
         db.save_doc(doc)
         text_attachment = u"un texte attaché"
         old_rev = doc['_rev']
         db.put_attachment(doc, text_attachment, "test", "text/plain")
-        self.assert_(old_rev != doc['_rev'])
+        self.assertNotEqual(old_rev, doc['_rev'])
         fetch_attachment = db.fetch_attachment(doc, "test")
-        self.assert_(text_attachment == fetch_attachment)
+        self.assertEqual(text_attachment, fetch_attachment)
         del self.Server['couchdbkit_test']
 
     def testSaveMultipleDocs(self):
@@ -562,12 +562,6 @@ class ClientDatabaseTestCase(unittest.TestCase):
         doc6 = db.get("test6")
         self.assert_(doc6['f'] == "a")
 
-        del self.Server['couchdbkit_test']
-
-    def testSetSecurity(self):
-        db = self.Server.create_db('couchdbkit_test')
-        res = db.set_security({"meta": "test"})
-        self.assert_(res['ok'] == True)
         del self.Server['couchdbkit_test']
 
     def testGetSecurity(self):

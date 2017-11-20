@@ -26,20 +26,27 @@ Example:
     >>> del server['simplecouchdb_test']
 
 """
-from couchdbkit.logging import error_logger
-
-UNKOWN_INFO = {}
-
-
 from collections import deque
+from copy import deepcopy
 from itertools import groupby
+from io import StringIO
+import json
 from mimetypes import guess_type
 import time
 
+import cloudant
+from cloudant.client import CouchDB
+from cloudant.database import CouchDatabase
+from cloudant.document import Document
+from cloudant.security_document import SecurityDocument
+from requests.exceptions import HTTPError
 from restkit.util import url_quote
+import six
+from six.moves.urllib.parse import urljoin, unquote
 
+from couchdbkit.logging import error_logger
 from .exceptions import InvalidAttachment, NoResultFound, \
-ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound
+        ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound
 from . import resource
 from .utils import validate_dbname
 
@@ -47,6 +54,8 @@ from .schema.util import maybe_schema_wrapper
 
 
 DEFAULT_UUID_BATCH_COUNT = 1000
+UNKOWN_INFO = {}
+
 
 def _maybe_serialize(doc):
     if hasattr(doc, "to_json"):
@@ -61,6 +70,7 @@ def _maybe_serialize(doc):
         return doc.copy(), False
 
     return doc, False
+
 
 class Server(object):
     """ Server object that allows you to access and manage a couchdb node.
@@ -104,6 +114,12 @@ class Server(object):
         else:
             self.res = self.resource_class(uri, **client_opts)
         self._uuids = deque()
+        # admin_party is true, because the username/pass is passed in uri for now
+        self.cloudant_client = CouchDB('', '', url=uri, admin_party=True, connect=True)
+
+    @property
+    def _request_session(self):
+        return self.cloudant_client.r_session
 
     def info(self):
         """ info of server
@@ -112,17 +128,18 @@ class Server(object):
 
         """
         try:
-            resp = self.res.get()
+            resp = self._request_session.get(self.uri)
+            resp.raise_for_status()
         except Exception:
             return UNKOWN_INFO
 
-        return resp.json_body
+        return resp.json()
 
     def all_dbs(self):
         """ get list of databases in CouchDb host
 
         """
-        return self.res.get('/_all_dbs').json_body
+        return self.cloudant_client.all_dbs()
 
     def get_db(self, dbname, **params):
         """
@@ -172,21 +189,21 @@ class Server(object):
         http://wiki.apache.org/couchdb/Replication
 
         """
-        payload = {
-            "source": source,
-            "target": target,
-        }
-        payload.update(params)
-        resp = self.res.post('/_replicate', payload=payload)
-        return resp.json_body
+        replicator = cloudant.replicator.Replication(self.cloudant_client)
+        source_db = Database(self.cloudant_client, source)
+        target_db = Database(self.cloudant_client, target)
+        return replicator.create_replication(source_db, target_db, **params)
 
     def active_tasks(self):
         """ return active tasks """
-        resp = self.res.get('/_active_tasks')
-        return resp.json_body
+        resp = self._request_session.get(urljoin(self.uri, '/_active_tasks'))
+        resp.raise_for_status()
+        return resp.json()
 
     def uuids(self, count=1):
-        return self.res.get('/_uuids', count=count).json_body
+        resp = self._request_session.get(urljoin(self.uri, '/_uuids'), params={'count': count})
+        resp.raise_for_status()
+        return resp.json()
 
     def next_uuid(self, count=None):
         """
@@ -207,14 +224,12 @@ class Server(object):
         return Database(self._db_uri(dbname), server=self)
 
     def __delitem__(self, dbname):
-        ret = self.res.delete('/%s/' % url_quote(dbname,
-            safe=":")).json_body
-        return ret
+        self.cloudant_client.delete_database(dbname)
 
     def __contains__(self, dbname):
         try:
-            self.res.head('/%s/' % url_quote(dbname, safe=":"))
-        except:
+            self.cloudant_client[dbname]
+        except KeyError:
             return False
         return True
 
@@ -235,6 +250,7 @@ class Server(object):
         dbname = url_quote(dbname, safe=":")
         return "/".join([self.uri, dbname])
 
+
 class Database(object):
     """ Object that abstract access to a CouchDB database
     A Database object can act as a Dict object.
@@ -251,6 +267,7 @@ class Database(object):
         """
         self.uri = uri.rstrip('/')
         self.server_uri, self.dbname = self.uri.rsplit("/", 1)
+        self.cloudant_dbname = unquote(self.dbname)
 
         if server is not None:
             if not hasattr(server, 'next_uuid'):
@@ -260,17 +277,22 @@ class Database(object):
         else:
             self.server = server = Server(self.server_uri, **params)
 
+        self.cloudant_client = self.server.cloudant_client
+
         validate_dbname(self.dbname)
+        self.cloudant_database = CouchDatabase(self.cloudant_client, self.cloudant_dbname)
         if create:
-            try:
-                self.server.res.head('/%s/' % self.dbname)
-            except ResourceNotFound:
-                self.server.res.put('/%s/' % self.dbname, **params).json_body
+            self.cloudant_database.create()
 
         self.res = server.res(self.dbname)
+        self._request_session = self.server._request_session
+        self.database_url = self.cloudant_database.database_url
 
     def __repr__(self):
         return "<%s %s>" % (self.__class__.__name__, self.dbname)
+
+    def _database_path(self, path):
+        return '/'.join([self.database_url, path])
 
     def info(self):
         """
@@ -278,15 +300,21 @@ class Database(object):
 
         @return: dict
         """
-        return self.res.get().json_body
+        return self.cloudant_database.metadata()
 
     def set_security(self, secobj):
         """ set database securrity object """
-        return self.res.put("/_security", payload=secobj).json_body
+        with SecurityDocument(self.cloudant_database) as sec_doc:
+            # context manager saves
+            for key in sec_doc:
+                del sec_doc[key]
+            for k, v in secobj.items():
+                sec_doc[k] = v
+        return self.get_security()
 
     def get_security(self):
         """ get database secuirity object """
-        return self.res.get("/_security").json_body
+        return self.cloudant_database.get_security_document()
 
     def compact(self, dname=None):
         """ compact database
@@ -296,23 +324,20 @@ class Database(object):
         path = "/_compact"
         if dname is not None:
             path = "%s/%s" % (path, resource.escape_docid(dname))
-        res = self.res.post(path, headers={"Content-Type":
-            "application/json"})
-        return res.json_body
+        path = self._database_path(path)
+        res = self._request_session.post(path, headers={"Content-Type": "application/json"})
+        res.raise_for_status()
+        return res.json()
 
     def view_cleanup(self):
-        res = self.res.post('/_view_cleanup', headers={"Content-Type":
-            "application/json"})
-        return res.json_body
+        return self.cloudant_database.view_cleanup()
 
     def flush(self):
         """ Remove all docs from a database
         except design docs."""
 
         # save ddocs
-        all_ddocs = self.all_docs(startkey="_design",
-                            endkey="_design/"+u"\u9999",
-                            include_docs=True)
+        all_ddocs = self.all_docs(startkey="_design", endkey="_design/"+u"\u9999", include_docs=True)
         ddocs = []
         for ddoc in all_ddocs:
             doc = ddoc['doc']
@@ -336,9 +361,7 @@ class Database(object):
         # we let a chance to the system to sync
         times = 0
         while times < 10:
-            try:
-                self.server.res.head('/%s/' % self.dbname)
-            except ResourceNotFound:
+            if self.dbname in self.server:
                 break
             time.sleep(0.2)
             times += 1
@@ -354,11 +377,8 @@ class Database(object):
         @return: boolean, True if document exist
         """
 
-        try:
-            self.res.head(resource.escape_docid(docid))
-        except ResourceNotFound:
-            return False
-        return True
+        doc = Document(self.cloudant_database, docid)
+        return doc.exists()
 
     def open_doc(self, docid, **params):
         """Get document from database
@@ -382,8 +402,15 @@ class Database(object):
                 raise TypeError("invalid schema")
             wrapper = schema.wrap
 
-        docid = resource.escape_docid(docid)
-        doc = self.res.get(docid, **params).json_body
+        if isinstance(docid, six.text_type):
+            docid = docid.encode('utf-8')
+        doc = Document(self.cloudant_database, docid)
+        try:
+            doc.fetch()
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                raise ResourceNotFound
+            raise
         if wrapper is not None:
             if not callable(wrapper):
                 raise TypeError("wrapper isn't a callable")
@@ -393,60 +420,60 @@ class Database(object):
         return doc
     get = open_doc
 
-    def list(self, list_name, view_name, **params):
-        """ Execute a list function on the server and return the response.
-        If the response is json it will be deserialized, otherwise the string
-        will be returned.
+    # def list(self, list_name, view_name, **params):
+    #     """ Execute a list function on the server and return the response.
+    #     If the response is json it will be deserialized, otherwise the string
+    #     will be returned.
+    #
+    #     Args:
+    #         @param list_name: should be 'designname/listname'
+    #         @param view_name: name of the view to run through the list document
+    #         @param params: params of the list
+    #     """
+    #     list_name = list_name.split('/')
+    #     dname = list_name.pop(0)
+    #     vname = '/'.join(list_name)
+    #     list_path = '_design/%s/_list/%s/%s' % (dname, vname, view_name)
+    #
+    #     return self.res.get(list_path, **params).json_body
 
-        Args:
-            @param list_name: should be 'designname/listname'
-            @param view_name: name of the view to run through the list document
-            @param params: params of the list
-        """
-        list_name = list_name.split('/')
-        dname = list_name.pop(0)
-        vname = '/'.join(list_name)
-        list_path = '_design/%s/_list/%s/%s' % (dname, vname, view_name)
+    # def show(self, show_name, doc_id, **params):
+    #     """ Execute a show function on the server and return the response.
+    #     If the response is json it will be deserialized, otherwise the string
+    #     will be returned.
+    #
+    #     Args:
+    #         @param show_name: should be 'designname/showname'
+    #         @param doc_id: id of the document to pass into the show document
+    #         @param params: params of the show
+    #     """
+    #     show_name = show_name.split('/')
+    #     dname = show_name.pop(0)
+    #     vname = '/'.join(show_name)
+    #     show_path = '_design/%s/_show/%s/%s' % (dname, vname, doc_id)
+    #
+    #     return self.res.get(show_path, **params).json_body
 
-        return self.res.get(list_path, **params).json_body
-
-    def show(self, show_name, doc_id, **params):
-        """ Execute a show function on the server and return the response.
-        If the response is json it will be deserialized, otherwise the string
-        will be returned.
-
-        Args:
-            @param show_name: should be 'designname/showname'
-            @param doc_id: id of the document to pass into the show document
-            @param params: params of the show
-        """
-        show_name = show_name.split('/')
-        dname = show_name.pop(0)
-        vname = '/'.join(show_name)
-        show_path = '_design/%s/_show/%s/%s' % (dname, vname, doc_id)
-
-        return self.res.get(show_path, **params).json_body
-
-    def update(self, update_name, doc_id=None, **params):
-        """ Execute update function on the server and return the response.
-        If the response is json it will be deserialized, otherwise the string
-        will be returned.
-
-        Args:
-            @param update_name: should be 'designname/updatename'
-            @param doc_id: id of the document to pass into the update function
-            @param params: params of the update
-        """
-        update_name = update_name.split('/')
-        dname = update_name.pop(0)
-        uname = '/'.join(update_name)
-
-        if doc_id is None:
-            update_path = '_design/%s/_update/%s' % (dname, uname)
-            return self.res.post(update_path, **params).json_body
-        else:
-            update_path = '_design/%s/_update/%s/%s' % (dname, uname, doc_id)
-            return self.res.put(update_path, **params).json_body
+    # def update(self, update_name, doc_id=None, **params):
+    #     """ Execute update function on the server and return the response.
+    #     If the response is json it will be deserialized, otherwise the string
+    #     will be returned.
+    #
+    #     Args:
+    #         @param update_name: should be 'designname/updatename'
+    #         @param doc_id: id of the document to pass into the update function
+    #         @param params: params of the update
+    #     """
+    #     update_name = update_name.split('/')
+    #     dname = update_name.pop(0)
+    #     uname = '/'.join(update_name)
+    #
+    #     if doc_id is None:
+    #         update_path = '_design/%s/_update/%s' % (dname, uname)
+    #         return self.res.post(update_path, **params).json_body
+    #     else:
+    #         update_path = '_design/%s/_update/%s/%s' % (dname, uname, doc_id)
+    #         return self.res.put(update_path, **params).json_body
 
     def all_docs(self, by_seq=False, **params):
         """Get all documents from a database
@@ -480,8 +507,9 @@ class Database(object):
 
         @return rev: str, the last revision of document.
         """
-        response = self.res.head(resource.escape_docid(docid))
-        return response['etag'].strip('"')
+        response = self._request_session.head(self._database_path(docid))
+        response.raise_for_status()
+        return response.headers['ETag'].strip('"')
 
     def save_doc(self, doc, encode_attachments=True, force_update=False,
             **params):
@@ -509,30 +537,29 @@ class Database(object):
             doc1['_attachments'] = resource.encode_attachments(doc['_attachments'])
 
         if '_id' in doc1:
-            docid = doc1['_id']
-            docid1 = resource.escape_docid(doc1['_id'])
+            docid = doc1['_id'].encode('utf-8')
+            couch_doc = Document(self.cloudant_database, docid)
+            couch_doc.update(doc1)
             try:
-                res = self.res.put(docid1, payload=doc1,
-                        **params).json_body
-            except ResourceConflict:
-                if force_update:
-                    doc1['_rev'] = self.get_rev(docid)
-                    res =self.res.put(docid1, payload=doc1,
-                            **params).json_body
-                else:
+                couch_doc.save()
+            except HTTPError as e:
+                if e.response.status_code != 409:
                     raise
-        else:
-            try:
-                doc['_id'] = self.server.next_uuid()
-                res =  self.res.put(doc['_id'], payload=doc1,
-                        **params).json_body
-            except:
-                res = self.res.post(payload=doc1, **params).json_body
 
-        if 'batch' in params and 'id' in res:
-            doc1.update({ '_id': res['id']})
+                if force_update:
+                    couch_doc['_rev'] = self.get_rev(docid)
+                    couch_doc.save()
+                else:
+                    raise ResourceConflict
+
+            res = deepcopy(couch_doc)
         else:
-            doc1.update({'_id': res['id'], '_rev': res['rev']})
+            res = self.cloudant_database.create_document(doc1)
+
+        if 'batch' in params and ('id' in res or '_id' in res):
+            doc1.update({ '_id': res.get('_id')})
+        else:
+            doc1.update({'_id': res.get('_id'), '_rev': res.get('_rev')})
 
         if schema:
             for key, value in doc.__class__.wrap(doc1).iteritems():
@@ -578,13 +605,16 @@ class Database(object):
                 if nextid:
                     doc['_id'] = nextid
 
-        payload = { "docs": docs1 }
+        payload = {"docs": docs1}
         if new_edits is not None:
             payload["new_edits"] = new_edits
 
         # update docs
-        results = self.res.post('/_bulk_docs',
-                payload=payload, **params).json_body
+        res = self._request_session.post(
+            self._database_path('_bulk_docs'), data=json.dumps(payload),
+            headers={"Content-Type": "application/json"}, **params)
+        res.raise_for_status()
+        results = res.json()
 
         errors = []
         for i, res in enumerate(results):
@@ -652,16 +682,24 @@ class Database(object):
         result = { 'ok': False }
 
         doc1, schema = _maybe_serialize(doc)
+
         if isinstance(doc1, dict):
             if not '_id' or not '_rev' in doc1:
                 raise KeyError('_id and _rev are required to delete a doc')
 
-            docid = resource.escape_docid(doc1['_id'])
-            result = self.res.delete(docid, rev=doc1['_rev'], **params).json_body
+            couch_doc = Document(self.cloudant_database, doc1['_id'])
+            couch_doc['_rev'] = doc1['_rev']
         elif isinstance(doc1, basestring): # we get a docid
-            rev = self.get_rev(doc1)
-            docid = resource.escape_docid(doc1)
-            result = self.res.delete(docid, rev=rev, **params).json_body
+            couch_doc = Document(self.cloudant_database, doc1)
+            couch_doc['_rev'] = self.get_rev(doc1)
+
+        # manual request because cloudant library doesn't return result
+        res = self._request_session.delete(
+            couch_doc.document_url,
+            params={"rev": couch_doc["_rev"]},
+        )
+        res.raise_for_status()
+        result = res.json()
 
         if schema:
             doc._doc.update({
@@ -688,7 +726,7 @@ class Database(object):
         if isinstance(doc1, basestring):
             docid = doc1
         else:
-            if not '_id' in doc1:
+            if '_id' not in doc1:
                 raise KeyError('_id is required to copy a doc')
             docid = doc1['_id']
 
@@ -708,10 +746,11 @@ class Database(object):
 
         if destination:
             headers.update({"Destination": str(destination)})
-            result = self.res.copy('/%s' % docid, headers=headers).json_body
-            return result
+            resp = self._request_session.request('copy', self._database_path(docid), headers=headers)
+            resp.raise_for_status()
+            return resp.json()
 
-        return { 'ok': False }
+        return {'ok': False}
 
     def raw_view(self, view_path, params):
         if 'keys' in params:
@@ -767,8 +806,6 @@ class Database(object):
                 wrapper=wrapper, schema=schema, params=params)
     iterdocuments = documents
 
-
-
     def put_attachment(self, doc, content, name=None, content_type=None,
             content_length=None, headers=None):
         """ Add attachement to a document. All attachments are streamed.
@@ -808,28 +845,28 @@ class Database(object):
         if not content:
             content = ""
             content_length = 0
+        elif isinstance(content, six.string_types):
+            content = content.encode('utf-8')
+        else:
+            content = content.read()
+
         if name is None:
             if hasattr(content, "name"):
                 name = content.name
             else:
                 raise InvalidAttachment('You should provide a valid attachment name')
+
         name = url_quote(name, safe="")
         if content_type is None:
             content_type = ';'.join(filter(None, guess_type(name)))
 
-        if content_type:
-            headers['Content-Type'] = content_type
-
         # add appropriate headers
-        if content_length and content_length is not None:
+        if content_length:
             headers['Content-Length'] = content_length
 
         doc1, schema = _maybe_serialize(doc)
-
-        docid = resource.escape_docid(doc1['_id'])
-        res = self.res(docid).put(name, payload=content,
-                headers=headers, rev=doc1['_rev']).json_body
-
+        couch_doc = Document(self.cloudant_database, doc1['_id'].encode('utf-8'))
+        res = couch_doc.put_attachment(name, content_type, content, headers)
         if res['ok']:
             new_doc = self.get(doc1['_id'], rev=res['rev'])
             doc.update(new_doc)
@@ -845,19 +882,16 @@ class Database(object):
         """
         doc1, schema = _maybe_serialize(doc)
 
-        docid = resource.escape_docid(doc1['_id'])
         name = url_quote(name, safe="")
+        couch_doc = Document(self.cloudant_database, doc1['_id'].encode('utf-8'))
+        res = couch_doc.delete_attachment(name, headers)
 
-        res = self.res(docid).delete(name, rev=doc1['_rev'],
-                headers=headers).json_body
         if res['ok']:
             new_doc = self.get(doc1['_id'], rev=res['rev'])
             doc.update(new_doc)
         return res['ok']
 
-
-    def fetch_attachment(self, id_or_doc, name, stream=False,
-            headers=None):
+    def fetch_attachment(self, id_or_doc, name, stream=False, headers=None):
         """ get attachment in a document
 
         @param id_or_doc: str or dict, doc id or document dict
@@ -872,20 +906,21 @@ class Database(object):
             doc, schema = _maybe_serialize(id_or_doc)
             docid = doc['_id']
 
-        docid = resource.escape_docid(docid)
         name = url_quote(name, safe="")
-
-        resp = self.res(docid).get(name, headers=headers)
+        couch_doc = Document(self.cloudant_database, docid.encode('utf-8'))
         if stream:
-            return resp.body_stream()
-        return resp.body_string(charset="utf-8")
+            tmp_file = StringIO()
+            couch_doc.get_attachment(name, headers, write_to=tmp_file)
+            return tmp_file
 
+        return couch_doc.get_attachment(name, headers)
 
     def ensure_full_commit(self):
         """ commit all docs in memory """
-        return self.res.post('_ensure_full_commit', headers={
-            "Content-Type": "application/json"
-        }).json_body
+        path = self._database_path('_ensure_full_commit')
+        res = self._request_session.post(path, headers={"Content-Type": "application/json"})
+        res.raise_for_status()
+        return res.json()
 
     def __len__(self):
         return self.info()['doc_count']
@@ -900,15 +935,15 @@ class Database(object):
         doc['_id'] = docid
         self.save_doc(doc)
 
-
     def __delitem__(self, docid):
-       self.delete_doc(docid)
+        self.delete_doc(docid)
 
     def __iter__(self):
         return self.documents().iterator()
 
     def __nonzero__(self):
         return (len(self) > 0)
+
 
 class ViewResults(object):
     """
@@ -1086,6 +1121,3 @@ class ViewResults(object):
 
     def __nonzero__(self):
         return bool(len(self))
-
-
-
