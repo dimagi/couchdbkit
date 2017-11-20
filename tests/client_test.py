@@ -6,10 +6,7 @@
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import copy
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from couchdbkit import ResourceNotFound, RequestFailed, \
 ResourceConflict

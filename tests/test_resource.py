@@ -5,10 +5,7 @@
 #
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from restkit.errors import RequestFailed, RequestError
 from couchdbkit.resource import CouchdbResource
