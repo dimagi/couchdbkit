@@ -563,8 +563,9 @@ class ClientDatabaseTestCase(unittest.TestCase):
 
     def testSetSecurity(self):
         db = self.Server.create_db('couchdbkit_test')
-        res = db.set_security({"meta": "test"})
-        self.assert_(res['ok'] == True)
+        sec_doc = {"meta": "test"}
+        res = db.set_security(sec_doc)
+        self.assertEquals(res, sec_doc)
         del self.Server['couchdbkit_test']
 
     def testGetSecurity(self):
@@ -821,4 +822,3 @@ class ClientViewTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
