@@ -20,6 +20,7 @@ BulkSaveError
 from .macros import package_shows, package_views
 from .. import utils
 import six
+from six.moves import filter
 
 if os.name == 'nt':
     def _replace_backslash(name):
@@ -133,7 +134,8 @@ class FSDoc(object):
             re_sp = re.compile('\s')
             att = {
                     "data": re_sp.sub('',base64.b64encode(f.read())),
-                    "content_type": ';'.join([_f for _f in mimetypes.guess_type(name) if _f])
+                    "content_type": ';'.join(filter(None,
+                                            mimetypes.guess_type(name)))
             }
 
         return att

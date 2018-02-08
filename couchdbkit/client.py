@@ -42,6 +42,7 @@ from cloudant.security_document import SecurityDocument
 from requests.exceptions import HTTPError
 from restkit.util import url_quote
 import six
+from six.moves import filter
 from six.moves.urllib.parse import urljoin, unquote
 
 from couchdbkit.logging import error_logger
@@ -852,7 +853,7 @@ class Database(object):
 
         name = url_quote(name, safe="")
         if content_type is None:
-            content_type = ';'.join([_f for _f in guess_type(name) if _f])
+            content_type = ';'.join(filter(None, guess_type(name)))
 
         if content_type:
             headers['Content-Type'] = content_type
