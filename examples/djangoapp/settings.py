@@ -1,5 +1,6 @@
 # Django settings for testapp project.
 
+from __future__ import absolute_import
 import os, platform
 
 PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))

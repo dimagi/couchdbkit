@@ -26,6 +26,7 @@ Example:
     >>> del server['simplecouchdb_test']
 
 """
+from __future__ import absolute_import
 from collections import deque
 from copy import deepcopy
 from itertools import groupby
@@ -559,7 +560,7 @@ class Database(object):
             doc1.update({'_id': res.get('_id'), '_rev': res.get('_rev')})
 
         if schema:
-            for key, value in doc.__class__.wrap(doc1).iteritems():
+            for key, value in six.iteritems(doc.__class__.wrap(doc1)):
                 doc[key] = value
         else:
             doc.update(doc1)
@@ -686,7 +687,7 @@ class Database(object):
 
             couch_doc = Document(self.cloudant_database, doc1['_id'])
             couch_doc['_rev'] = doc1['_rev']
-        elif isinstance(doc1, basestring): # we get a docid
+        elif isinstance(doc1, six.string_types): # we get a docid
             couch_doc = Document(self.cloudant_database, doc1)
             couch_doc['_rev'] = self.get_rev(doc1)
 
@@ -720,7 +721,7 @@ class Database(object):
             headers = {}
 
         doc1, schema = _maybe_serialize(doc)
-        if isinstance(doc1, basestring):
+        if isinstance(doc1, six.string_types):
             docid = doc1
         else:
             if '_id' not in doc1:
@@ -729,7 +730,7 @@ class Database(object):
 
         if dest is None:
             destination = self.server.next_uuid(count=1)
-        elif isinstance(dest, basestring):
+        elif isinstance(dest, six.string_types):
             if dest in self:
                 dest = self.get(dest)
                 destination = "%s?rev=%s" % (dest['_id'], dest['_rev'])
@@ -851,7 +852,7 @@ class Database(object):
 
         name = url_quote(name, safe="")
         if content_type is None:
-            content_type = ';'.join(filter(None, guess_type(name)))
+            content_type = ';'.join([_f for _f in guess_type(name) if _f])
 
         if content_type:
             headers['Content-Type'] = content_type
@@ -900,7 +901,7 @@ class Database(object):
         @return: `restkit.httpc.Response` object
         """
 
-        if isinstance(id_or_doc, basestring):
+        if isinstance(id_or_doc, six.string_types):
             docid = id_or_doc
         else:
             doc, schema = _maybe_serialize(id_or_doc)

@@ -88,6 +88,7 @@ exemple :
 To create databases and sync views, just run the usual `syncdb` command.
 It won't destroy your datas, just synchronize views.
 """
+from __future__ import absolute_import
 from django.db.models import signals
 
 

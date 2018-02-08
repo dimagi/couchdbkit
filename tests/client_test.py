@@ -3,6 +3,8 @@
 # This file is part of couchdbkit released under the MIT license.
 # See the NOTICE for more information.
 #
+from __future__ import absolute_import
+import six
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import copy
@@ -28,7 +30,7 @@ class ClientServerTestCase(unittest.TestCase):
 
     def testGetInfo(self):
         info = self.Server.info()
-        self.assert_(info.has_key('version'))
+        self.assert_('version' in info)
 
     def testCreateDb(self):
         res = self.Server.create_db('couchdbkit_test')
@@ -76,7 +78,7 @@ class ClientServerTestCase(unittest.TestCase):
 
     def testGetUUIDS(self):
         uuid = self.Server.next_uuid()
-        self.assert_(isinstance(uuid, basestring) == True)
+        self.assert_(isinstance(uuid, six.string_types) == True)
         self.assert_(len(self.Server._uuids) == 999)
         uuid2 = self.Server.next_uuid()
         self.assert_(uuid != uuid2)
@@ -523,7 +525,7 @@ class ClientDatabaseTestCase(unittest.TestCase):
         all_errors = []
         try:
             db.bulk_save(docs2)
-        except BulkSaveError, e:
+        except BulkSaveError as e:
             all_errors = e.errors
 
         self.assertEqual(len(all_errors), 2)
