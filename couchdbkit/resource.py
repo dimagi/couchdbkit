@@ -114,6 +114,8 @@ class CouchdbResource(Resource):
             if not hasattr(payload, 'read') and not isinstance(payload, six.string_types):
                 payload = json.dumps(payload).encode('utf-8')
                 headers.setdefault('Content-Type', 'application/json')
+            elif isinstance(payload, six.text_type):
+                payload = payload.encode('utf-8')
 
         params = encode_params(params)
         try:
