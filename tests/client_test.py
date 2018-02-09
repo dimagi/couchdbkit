@@ -4,6 +4,7 @@
 # See the NOTICE for more information.
 #
 from __future__ import absolute_import
+from __future__ import unicode_literals
 import six
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
@@ -377,7 +378,7 @@ class ClientDatabaseTestCase(unittest.TestCase):
         db = self.Server.create_db('couchdbkit_test')
         doc = { 'string': 'test', 'number': 4 }
         db.save_doc(doc)
-        text_attachment = u"un texte attaché"
+        text_attachment = "un texte attaché"
         old_rev = doc['_rev']
         db.put_attachment(doc, text_attachment, "test", "text/plain")
         self.assert_(old_rev != doc['_rev'])
@@ -389,7 +390,7 @@ class ClientDatabaseTestCase(unittest.TestCase):
         db = self.Server.create_db('couchdbkit_test')
         doc = { 'string': 'test', 'number': 4 }
         db.save_doc(doc)
-        text_attachment = u"a text attachment"
+        text_attachment = "a text attachment"
         db.put_attachment(doc, text_attachment, "test", "text/plain")
         stream = db.fetch_attachment(doc, "test", stream=True)
         fetch_attachment = stream.read()
@@ -422,7 +423,7 @@ class ClientDatabaseTestCase(unittest.TestCase):
         db = self.Server.create_db('couchdbkit_test')
         doc = { '_id': 'test/slashes', 'string': 'test', 'number': 4 }
         db.save_doc(doc)
-        text_attachment = u"un texte attaché"
+        text_attachment = "un texte attaché"
         old_rev = doc['_rev']
         db.put_attachment(doc, text_attachment, "test", "text/plain")
         self.assert_(old_rev != doc['_rev'])
@@ -439,9 +440,9 @@ class ClientDatabaseTestCase(unittest.TestCase):
 
     def testAttachmentUnicode8URI(self):
         db = self.Server.create_db('couchdbkit_test')
-        doc = { '_id': u"éàù/slashes", 'string': 'test', 'number': 4 }
+        doc = { '_id': "éàù/slashes", 'string': 'test', 'number': 4 }
         db.save_doc(doc)
-        text_attachment = u"un texte attaché"
+        text_attachment = "un texte attaché"
         old_rev = doc['_rev']
         db.put_attachment(doc, text_attachment, "test", "text/plain")
         self.assert_(old_rev != doc['_rev'])

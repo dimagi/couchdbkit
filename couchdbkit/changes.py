@@ -7,6 +7,7 @@
 module to fetch and stream changes from a database
 """
 
+from __future__ import unicode_literals
 from .utils import json
 
 

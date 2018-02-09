@@ -4,6 +4,7 @@
 # See the NOTICE for more information.
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 from paste.deploy import loadapp
 from paste.script.command import Command

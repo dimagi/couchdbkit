@@ -7,6 +7,7 @@
 to map CouchDB document in Python statically, dynamically or both
 """
 from __future__ import absolute_import
+from __future__ import unicode_literals
 import copy
 
 import jsonobject

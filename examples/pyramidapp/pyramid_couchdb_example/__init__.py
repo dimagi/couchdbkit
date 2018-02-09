@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from pyramid.config import Configurator
 from pyramid.events import subscriber, ApplicationCreated
 from couchdbkit import *

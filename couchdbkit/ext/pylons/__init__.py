@@ -87,4 +87,5 @@ and load fixtures, this is not done yet and is TBC.
 
 """
 
+from __future__ import unicode_literals
 from .db import init_from_config

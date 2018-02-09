@@ -16,6 +16,7 @@
 #  limitations under the License.
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
 import couchdbkit
 from couchdbkit.contrib import WSGIHandler
 import json

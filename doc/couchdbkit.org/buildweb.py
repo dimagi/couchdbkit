@@ -19,6 +19,7 @@ from __future__ import with_statement
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 import codecs
 import datetime
 import os
@@ -154,16 +155,16 @@ class Site(object):
         rss.write_xml(open(os.path.join(conf.OUTPUT_PATH, "feed.xml"), "w"))
         
     def generate_sitemap(self):
-        xml = u'<?xml version="1.0" encoding="UTF-8"?>'
-        xml += u'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        xml = '<?xml version="1.0" encoding="UTF-8"?>'
+        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
         for page in self.sitemap:
-            xml += u'<url>'
-            xml += u'<loc>%s</loc>' % page.url
-            xml += u'<lastmod>%s</lastmod>' % rfc3339_date(page.headers['published'])
-            xml += u'<changefreq>daily</changefreq>'
-            xml += u'<priority>0.5</priority>'
-            xml += u'</url>'
-        xml += u'</urlset>'
+            xml += '<url>'
+            xml += '<loc>%s</loc>' % page.url
+            xml += '<lastmod>%s</lastmod>' % rfc3339_date(page.headers['published'])
+            xml += '<changefreq>daily</changefreq>'
+            xml += '<priority>0.5</priority>'
+            xml += '</url>'
+        xml += '</urlset>'
         with codecs.open(os.path.join(conf.OUTPUT_PATH, "sitemaps.xml"), "w", "utf-8") as f:
             f.write(xml)
             

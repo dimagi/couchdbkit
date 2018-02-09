@@ -7,6 +7,7 @@
 All exceptions used in couchdbkit.
 """
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from restkit.errors import ResourceError
 import jsonobject.exceptions
 

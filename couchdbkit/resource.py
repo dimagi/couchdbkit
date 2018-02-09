@@ -20,6 +20,7 @@ Example:
 
 """
 from __future__ import absolute_import
+from __future__ import unicode_literals
 import base64
 import re
 from datetime import datetime
