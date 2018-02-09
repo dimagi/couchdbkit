@@ -50,7 +50,7 @@ class SchemaProperties(jsonobject.JsonObjectMeta):
             doc_type_attr = dct['_doc_type_attr']
         else:
             doc_type_attr = (
-                super(SchemaProperties, mcs).__new__(mcs, '', bases, {})
+                super(SchemaProperties, mcs).__new__(mcs, b'', bases, {})
             )._doc_type_attr
         if isinstance(dct.get(doc_type_attr), six.string_types):
             doc_type = dct.pop(doc_type_attr)
