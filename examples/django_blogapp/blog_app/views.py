@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from couchdbkit.ext.django.forms import DocumentForm
 from django.forms.fields import CharField
 from django.forms.widgets import HiddenInput

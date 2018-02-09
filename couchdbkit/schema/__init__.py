@@ -155,6 +155,7 @@ reference across threads, changing a db to a class will be applied to
 all threads. It's better to use the db object methods if you want to be
 threadsafe.
 """
+from __future__ import unicode_literals
 from .properties import (
         Property,
         StringProperty,

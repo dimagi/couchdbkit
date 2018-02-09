@@ -4,6 +4,7 @@
 # See the NOTICE for more information.
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from repoze.what.adapters import BaseSourceAdapter
 from repoze.who.interfaces import IAuthenticator
 from repoze.who.interfaces import IMetadataProvider

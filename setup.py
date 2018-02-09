@@ -4,6 +4,7 @@
 # See the NOTICE for more information.
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from imp import load_source
 import os
 import sys

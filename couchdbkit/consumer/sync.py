@@ -5,6 +5,7 @@
 
 from __future__ import with_statement
 
+from __future__ import unicode_literals
 from .base import ConsumerBase, check_callable
 from ..utils import json
 

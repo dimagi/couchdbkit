@@ -21,6 +21,7 @@ It's replaced by couchdbkit.designer module and push* functions.
 from __future__ import with_statement
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from .designer import document, push, pushapps, pushdocs
 import six
 

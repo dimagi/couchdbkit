@@ -27,6 +27,7 @@ Example:
 
 """
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from collections import deque
 from copy import deepcopy
 from itertools import groupby
@@ -338,7 +339,7 @@ class Database(object):
         except design docs."""
 
         # save ddocs
-        all_ddocs = self.all_docs(startkey="_design", endkey="_design/"+u"\u9999", include_docs=True)
+        all_ddocs = self.all_docs(startkey="_design", endkey="_design/"+"\u9999", include_docs=True)
         ddocs = []
         for ddoc in all_ddocs:
             doc = ddoc['doc']

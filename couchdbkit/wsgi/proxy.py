@@ -4,6 +4,7 @@
 # See the NOTICE for more information.
 
 from __future__ import absolute_import
+from __future__ import unicode_literals
 import six.moves.urllib.parse
 
 from restkit.contrib.wsgi_proxy import HostProxy, ALLOWED_METHODS

@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 import six
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
@@ -542,7 +543,7 @@ class DocumentTestCase(unittest.TestCase):
         a = A()
         a.save()
 
-        text_attachment = u"un texte attaché"
+        text_attachment = "un texte attaché"
         old_rev = a._rev
 
         a.put_attachment(text_attachment, "test", "text/plain")
@@ -797,9 +798,9 @@ class PropertyTestCase(unittest.TestCase):
         doc = MyDoc()
         self.assert_('schema' in doc._doc)
 
-        doc.schema.astring = u"test"
-        self.assert_(doc.schema.astring == u"test")
-        self.assert_(doc._doc['schema']['astring'] == u"test")
+        doc.schema.astring = "test"
+        self.assert_(doc.schema.astring == "test")
+        self.assert_(doc._doc['schema']['astring'] == "test")
 
         MyDoc._db = self.db
 
@@ -807,8 +808,8 @@ class PropertyTestCase(unittest.TestCase):
         doc2 = MyDoc.get(doc._id)
 
         self.assert_(isinstance(doc2.schema, MySchema) == True)
-        self.assert_(doc2.schema.astring == u"test")
-        self.assert_(doc2._doc['schema']['astring'] == u"test")
+        self.assert_(doc2.schema.astring == "test")
+        self.assert_(doc2._doc['schema']['astring'] == "test")
 
     def testSchemaPropertyWithRequired(self):
         class B( Document ):
@@ -831,7 +832,7 @@ class PropertyTestCase(unittest.TestCase):
             raise RuntimeError
         except BadValueError:
             pass
-        b1.b.name = u"test"
+        b1.b.name = "test"
 
     def testSchemaProperty2(self):
         class DocOne(Document):
@@ -905,7 +906,7 @@ class PropertyTestCase(unittest.TestCase):
             c = six.text_type()
             i = int(4)
         a = A()
-        self.assert_(a._doc == {'c': u'', 'doc_type': 'A', 'i': 4})
+        self.assert_(a._doc == {'c': '', 'doc_type': 'A', 'i': 4})
         def bad_value():
             a.i = "essai"
 
@@ -949,27 +950,27 @@ class PropertyTestCase(unittest.TestCase):
 
         b = B()
         self.assert_(b._doc == {'doc_type': 'B', 's1': None, 's2': None,
-            'sm': {'doc_type': 'A', 's': u'foo'}})
+            'sm': {'doc_type': 'A', 's': 'foo'}})
 
         b.created = datetime(2009, 2, 6, 18, 58, 20, 905556)
         self.assert_(b._doc == {'created': '2009-02-06T18:58:20Z',
             'doc_type': 'B',
             's1': None,
             's2': None,
-            'sm': {'doc_type': 'A', 's': u'foo'}})
+            'sm': {'doc_type': 'A', 's': 'foo'}})
 
         self.assert_(isinstance(b.created, datetime) == True)
 
         a.created = datetime(2009, 2, 6, 20, 58, 20, 905556)
         self.assert_(a._doc ==  {'created': '2009-02-06T20:58:20Z',
-            'doc_type': 'A', 's': u'foo'})
+            'doc_type': 'A', 's': 'foo'})
 
         self.assert_(b._doc == {'created': '2009-02-06T18:58:20Z',
             'doc_type': 'B',
             's1': None,
             's2': None,
             'sm': {'created': '2009-02-06T20:58:20Z', 'doc_type': 'A',
-            's': u'foo'}})
+            's': 'foo'}})
 
 
         b2 = B()
@@ -1001,7 +1002,7 @@ class PropertyTestCase(unittest.TestCase):
 
         b.sm.s = "t1"
         self.assert_(b._doc == {'doc_type': 'B', 's1': None, 's2': None,
-            'sm': {'doc_type': 'A', 's': u't1'}})
+            'sm': {'doc_type': 'A', 's': 't1'}})
 
         b2 = B()
         self.assert_(b2._doc == {'doc_type': 'B', 's1': None, 's2':
@@ -1009,7 +1010,7 @@ class PropertyTestCase(unittest.TestCase):
 
         b2.sm.s = "t2"
         self.assert_(b2._doc == {'doc_type': 'B', 's1': None, 's2':
-            None, 'sm': {'doc_type': 'A', 's': u't2'}})
+            None, 'sm': {'doc_type': 'A', 's': 't2'}})
 
         self.assert_(b2.sm.s != b.sm.s)
 
@@ -1026,11 +1027,11 @@ class PropertyTestCase(unittest.TestCase):
         a = A()
         a.s = "test"
         b.slm.append(a)
-        self.assert_(b._doc == {'doc_type': 'B', 'slm': [{'doc_type': 'A', 's': u'test'}]})
+        self.assert_(b._doc == {'doc_type': 'B', 'slm': [{'doc_type': 'A', 's': 'test'}]})
         a1 = A()
         a1.s = "test2"
         b.slm.append(a1)
-        self.assert_(b._doc == {'doc_type': 'B', 'slm': [{'doc_type': 'A', 's': u'test'}, {'doc_type': 'A', 's': u'test2'}]})
+        self.assert_(b._doc == {'doc_type': 'B', 'slm': [{'doc_type': 'A', 's': 'test'}, {'doc_type': 'A', 's': 'test2'}]})
 
         B.set_db(self.db)
         b.save()
@@ -1404,19 +1405,19 @@ class PropertyTestCase(unittest.TestCase):
         class B(Document):
             ls = StringListProperty()
         b = B()
-        b.ls.append(u"test")
+        b.ls.append("test")
         self.assertIsNone(b.validate())
         with self.assertRaises(BadValueError):
             b.ls.append(datetime.utcnow())
 
         b1  = B()
-        b1.ls = [u'hello', u'123']
-        self.assert_(b1.ls == [u'hello', u'123'])
-        self.assert_(b1._doc['ls'] == [u'hello', u'123'])
+        b1.ls = ['hello', '123']
+        self.assert_(b1.ls == ['hello', '123'])
+        self.assert_(b1._doc['ls'] == ['hello', '123'])
 
-        self.assert_(b1.ls.index(u'hello') == 0)
-        b1.ls.remove(u'hello')
-        self.assert_(u'hello' not in b1.ls)
+        self.assert_(b1.ls.index('hello') == 0)
+        b1.ls.remove('hello')
+        self.assert_('hello' not in b1.ls)
 
     def testListPropertyExtend(self):
         """list extend method for property w/o type
@@ -1656,7 +1657,7 @@ class PropertyTestCase(unittest.TestCase):
         a.d['s'] = "level1"
         a.d['d'] = {}
         a.d['d']['s'] = "level2"
-        self.assert_(a._doc == {'d': {'d': {'s': 'level2'}, 's': 'level1'}, 'doc_type': 'A', 's': u'test'})
+        self.assert_(a._doc == {'d': {'d': {'s': 'level2'}, 's': 'level1'}, 'doc_type': 'A', 's': 'test'})
         a.save()
 
         a1 = A.get(a._id)
@@ -1718,7 +1719,7 @@ class PropertyTestCase(unittest.TestCase):
         a1 = A.get(a._id)
         self.assert_(a1.l == [1,
          datetime(2009, 5, 12, 13, 35, 9),
-         {u'date': datetime(2009, 5, 12, 13, 35, 9), u's': u'test'}]
+         {'date': datetime(2009, 5, 12, 13, 35, 9), 's': 'test'}]
         )
 
         a.l[2]['s'] = 'test edited'
