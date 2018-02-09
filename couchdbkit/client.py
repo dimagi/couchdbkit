@@ -26,6 +26,7 @@ Example:
     >>> del server['simplecouchdb_test']
 
 """
+from __future__ import absolute_import
 from collections import deque
 from copy import deepcopy
 from itertools import groupby
@@ -41,6 +42,7 @@ from cloudant.security_document import SecurityDocument
 from requests.exceptions import HTTPError
 from restkit.util import url_quote
 import six
+from six.moves import filter
 from six.moves.urllib.parse import urljoin, unquote
 
 from couchdbkit.logging import error_logger
@@ -559,7 +561,7 @@ class Database(object):
             doc1.update({'_id': res.get('_id'), '_rev': res.get('_rev')})
 
         if schema:
-            for key, value in doc.__class__.wrap(doc1).iteritems():
+            for key, value in six.iteritems(doc.__class__.wrap(doc1)):
                 doc[key] = value
         else:
             doc.update(doc1)
@@ -686,7 +688,7 @@ class Database(object):
 
             couch_doc = Document(self.cloudant_database, doc1['_id'])
             couch_doc['_rev'] = doc1['_rev']
-        elif isinstance(doc1, basestring): # we get a docid
+        elif isinstance(doc1, six.string_types): # we get a docid
             couch_doc = Document(self.cloudant_database, doc1)
             couch_doc['_rev'] = self.get_rev(doc1)
 
@@ -720,7 +722,7 @@ class Database(object):
             headers = {}
 
         doc1, schema = _maybe_serialize(doc)
-        if isinstance(doc1, basestring):
+        if isinstance(doc1, six.string_types):
             docid = doc1
         else:
             if '_id' not in doc1:
@@ -729,7 +731,7 @@ class Database(object):
 
         if dest is None:
             destination = self.server.next_uuid(count=1)
-        elif isinstance(dest, basestring):
+        elif isinstance(dest, six.string_types):
             if dest in self:
                 dest = self.get(dest)
                 destination = "%s?rev=%s" % (dest['_id'], dest['_rev'])
@@ -900,7 +902,7 @@ class Database(object):
         @return: `restkit.httpc.Response` object
         """
 
-        if isinstance(id_or_doc, basestring):
+        if isinstance(id_or_doc, six.string_types):
             docid = id_or_doc
         else:
             doc, schema = _maybe_serialize(id_or_doc)

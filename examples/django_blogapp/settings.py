@@ -1,4 +1,5 @@
 # Django settings for django_blogapp project.
+from __future__ import absolute_import
 import os
 
 PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))

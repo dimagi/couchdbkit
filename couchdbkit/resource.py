@@ -19,6 +19,7 @@ Example:
     u'Welcome'
 
 """
+from __future__ import absolute_import
 import base64
 import re
 from datetime import datetime
@@ -32,6 +33,7 @@ from .exceptions import ResourceNotFound, ResourceConflict, \
 PreconditionFailed
 from .utils import json
 from .logging import request_logger
+import six
 
 USER_AGENT = 'couchdbkit/%s' % __version__
 
@@ -108,7 +110,7 @@ class CouchdbResource(Resource):
 
         if payload is not None:
             #TODO: handle case we want to put in payload json file.
-            if not hasattr(payload, 'read') and not isinstance(payload, basestring):
+            if not hasattr(payload, 'read') and not isinstance(payload, six.string_types):
                 payload = json.dumps(payload).encode('utf-8')
                 headers.setdefault('Content-Type', 'application/json')
 
@@ -116,7 +118,7 @@ class CouchdbResource(Resource):
         try:
             resp = Resource.request(self, method, path=path,
                              payload=payload, headers=headers, **params)
-        except ResourceError, e:
+        except ResourceError as e:
             msg = getattr(e, 'msg', '')
             if e.response and msg:
                 if e.response.headers.get('content-type') == 'application/json':
@@ -175,7 +177,7 @@ def encode_params(params):
                 value = json.dumps(value)
             elif value is None:
                 continue
-            elif not isinstance(value, basestring):
+            elif not isinstance(value, six.string_types):
                 value = json.dumps(value)
             _params[name] = value
     return _params
@@ -191,7 +193,7 @@ def escape_docid(docid):
 
 re_sp = re.compile('\s')
 def encode_attachments(attachments):
-    for k, v in attachments.iteritems():
+    for k, v in six.iteritems(attachments):
         if v.get('stub', False):
             continue
         else:

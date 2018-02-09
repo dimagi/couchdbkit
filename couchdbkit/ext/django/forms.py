@@ -78,12 +78,14 @@ More fields types will be supported soon.
 """
 
 
+from __future__ import absolute_import
 from collections import OrderedDict
 from django.utils.text import capfirst
 from django.forms.util import ErrorList
 from django.forms.forms import BaseForm, get_declared_fields
 from django.forms import fields as f
 from django.forms.widgets import media_property
+import six
 
 FIELDS_PROPERTES_MAPPING = {
     "StringProperty": f.CharField,
@@ -136,7 +138,7 @@ def fields_for_document(document, properties=None, exclude=None):
         values = [document._properties[prop] for prop in properties if \
                                                 prop in document._properties]
     else:
-        values = document._properties.values()
+        values = list(document._properties.values())
         values.sort(lambda a, b: cmp(a.creation_counter, b.creation_counter))
     
     for prop in values: 
@@ -263,6 +265,5 @@ class BaseDocumentForm(BaseForm):
         
         return self.instance
             
-class DocumentForm(BaseDocumentForm):
+class DocumentForm(six.with_metaclass(DocumentFormMetaClass, BaseDocumentForm)):
     """ The document form object """
-    __metaclass__ = DocumentFormMetaClass          

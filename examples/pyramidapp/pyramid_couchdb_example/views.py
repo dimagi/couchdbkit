@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import datetime
 
 from pyramid.view import view_config

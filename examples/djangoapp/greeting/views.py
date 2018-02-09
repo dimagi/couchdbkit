@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import absolute_import
 from datetime import datetime
 from django.shortcuts import render_to_response as render
 from django.template import RequestContext, loader, Context
