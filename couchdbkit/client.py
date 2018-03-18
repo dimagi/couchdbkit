@@ -49,7 +49,7 @@ from couchdbkit.logging import error_logger
 from .exceptions import InvalidAttachment, NoResultFound, \
         ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound
 from . import resource
-from .utils import validate_dbname
+from .utils import validate_dbname, to_bytestring
 
 from .schema.util import maybe_schema_wrapper
 
@@ -852,24 +852,16 @@ class Database(object):
             else:
                 raise InvalidAttachment('You should provide a valid attachment name')
 
-        name = url_quote(name, safe="")
         if content_type is None:
             content_type = ';'.join(filter(None, guess_type(name)))
 
-        if content_type:
-            headers['Content-Type'] = content_type
-
-        # add appropriate headers
         if content_length:
             headers['Content-Length'] = content_length
 
         doc1, schema = _maybe_serialize(doc)
 
-        docid = resource.escape_docid(doc1['_id'])
-        # TODO restkit_py2
-        res = self.res(docid).put(name, payload=content,
-                headers=headers, rev=doc1['_rev']).json_body
-
+        couch_doc = Document(self.cloudant_database, to_bytestring(doc1['_id']))
+        res = couch_doc.put_attachment(name, content_type, to_bytestring(content), headers=headers)
         if res['ok']:
             new_doc = self.get(doc1['_id'], rev=res['rev'])
             doc.update(new_doc)
