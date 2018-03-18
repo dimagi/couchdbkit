@@ -752,6 +752,7 @@ class Database(object):
         return {'ok': False}
 
     def raw_view(self, view_path, params):
+        # TODO: restkit_py2
         if 'keys' in params:
             keys = params.pop('keys')
             return self.res.post(view_path, payload={ 'keys': keys }, **params)
@@ -865,6 +866,7 @@ class Database(object):
         doc1, schema = _maybe_serialize(doc)
 
         docid = resource.escape_docid(doc1['_id'])
+        # TODO restkit_py2
         res = self.res(docid).put(name, payload=content,
                 headers=headers, rev=doc1['_rev']).json_body
 
@@ -886,6 +888,7 @@ class Database(object):
         docid = resource.escape_docid(doc1['_id'])
         name = url_quote(name, safe="")
 
+        # TODO restkit_py2
         res = self.res(docid).delete(name, rev=doc1['_rev'],
                 headers=headers).json_body
         if res['ok']:
@@ -911,6 +914,7 @@ class Database(object):
         docid = resource.escape_docid(docid)
         name = url_quote(name, safe="")
 
+        # TODO restkit_py2
         resp = self.res(docid).get(name, headers=headers)
         if stream:
             return resp.body_stream()
