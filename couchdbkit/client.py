@@ -437,7 +437,9 @@ class Database(object):
         vname = '/'.join(list_name)
         list_path = '_design/%s/_list/%s/%s' % (dname, vname, view_name)
 
-        return self.res.get(list_path, **params).json_body
+        res = self._request_session.get(self._database_path(list_path), params=params)
+        res.raise_for_status()
+        return res.json()
 
     def show(self, show_name, doc_id, **params):
         """ Execute a show function on the server and return the response.
@@ -454,7 +456,9 @@ class Database(object):
         vname = '/'.join(show_name)
         show_path = '_design/%s/_show/%s/%s' % (dname, vname, doc_id)
 
-        return self.res.get(show_path, **params).json_body
+        res = self._request_session.get(self._database_path(show_path), params=params)
+        res.raise_for_status()
+        return res.json()
 
     def update(self, update_name, doc_id=None, **params):
         """ Execute update function on the server and return the response.
@@ -472,10 +476,13 @@ class Database(object):
 
         if doc_id is None:
             update_path = '_design/%s/_update/%s' % (dname, uname)
-            return self.res.post(update_path, **params).json_body
+            res = self._request_session.post(self._database_path(update_path), payload=json.dumps(params))
         else:
             update_path = '_design/%s/_update/%s/%s' % (dname, uname, doc_id)
-            return self.res.put(update_path, **params).json_body
+            res = self._request_session.put(self._database_path(update_path), data=json.dumps(params))
+
+        res.raise_for_status()
+        return res.json()
 
     def all_docs(self, by_seq=False, **params):
         """Get all documents from a database

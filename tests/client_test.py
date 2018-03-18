@@ -111,14 +111,12 @@ class ClientDatabaseTestCase(unittest.TestCase):
         info = db1.info()
         self.assert_(info['db_name'] == "couchdbkit_test")
 
-
     def testCreateEmptyDoc(self):
         db = self.Server.create_db('couchdbkit_test')
         doc = {}
         db.save_doc(doc)
         del self.Server['couchdbkit_test']
         self.assert_('_id' in doc)
-
 
     def testCreateDoc(self):
         db = self.Server.create_db('couchdbkit_test')
