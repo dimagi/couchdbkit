@@ -28,7 +28,7 @@ Example:
 """
 from __future__ import absolute_import
 from collections import deque
-from copy import deepcopy
+from io import StringIO
 from itertools import groupby
 import json
 from mimetypes import guess_type
@@ -907,15 +907,15 @@ class Database(object):
             doc, schema = _maybe_serialize(id_or_doc)
             docid = doc['_id']
 
-        docid = resource.escape_docid(docid)
-        name = url_quote(name, safe="")
-
-        # TODO restkit_py2
-        resp = self.res(docid).get(name, headers=headers)
+        couch_doc = Document(self.cloudant_database, docid.encode('utf-8'))
         if stream:
-            return resp.body_stream()
-        return resp.body_string(charset="utf-8")
-
+            stream_file = StringIO()
+            resp = couch_doc.get_attachment(name, headers=headers, write_to=stream_file)
+            stream_file.seek(0)
+            return stream_file
+        else:
+            resp = couch_doc.get_attachment(name, headers=headers)
+        return resp.encode('latin-1').decode('utf-8')
 
     def ensure_full_commit(self):
         """ commit all docs in memory """
