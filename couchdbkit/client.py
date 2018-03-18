@@ -888,12 +888,8 @@ class Database(object):
         docid = resource.escape_docid(doc1['_id'])
         name = url_quote(name, safe="")
 
-        # TODO restkit_py2
-        res = self.res(docid).delete(name, rev=doc1['_rev'],
-                headers=headers).json_body
-        if res['ok']:
-            new_doc = self.get(doc1['_id'], rev=res['rev'])
-            doc.update(new_doc)
+        couch_doc = Document(self.cloudant_database, docid)
+        res = couch_doc.delete_attachment(name, headers=headers)
         return res['ok']
 
     def fetch_attachment(self, id_or_doc, name, stream=False, headers=None):
