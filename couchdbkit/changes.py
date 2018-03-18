@@ -7,8 +7,6 @@
 module to fetch and stream changes from a database
 """
 
-from .utils import json
-
 
 class ChangesStream(object):
     """\
@@ -43,36 +41,9 @@ class ChangesStream(object):
         return False
 
     def __iter__(self):
-        r = self.db.res.get("_changes", **self.params)
-        with r.body_stream() as body:
-            while True:
-                line = body.readline()
-                if not line:
-                    break
-                if line.endswith("\r\n"):
-                    line = line[:-2]
-                else:
-                    line = line[:-1]
-                if not line:
-                    #heartbeat
-                    continue
-
-                if line.endswith(","):
-                    line = line[:-1]
-                ret = self._parse_change(line)
-                if not ret:
-                    continue
-                yield ret
-
-    def _parse_change(self, line):
-        if line.startswith('{"results":') or line.startswith('"last_seq'):
-            return None
-        else:
-            try:
-                obj = json.loads(line)
-                return obj
-            except ValueError:
-                return None
+        feed = self.db.cloudant_database.changes(**self.params)
+        for change in feed:
+            yield change
 
     def __next__(self):
         return self
