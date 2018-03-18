@@ -39,6 +39,7 @@ import time
 import cloudant
 from cloudant.client import CouchDB
 from cloudant.database import CouchDatabase
+from cloudant.design_document import DesignDocument
 from cloudant.document import Document
 from cloudant.error import CloudantClientException
 from cloudant.security_document import SecurityDocument
@@ -344,7 +345,7 @@ class Database(object):
         except design docs."""
 
         # save ddocs
-        all_ddocs = self.all_docs(startkey="_design", endkey="_design/"+u"\u9999", include_docs=True)
+        all_ddocs = self.all_docs(startkey=u"_design", endkey=u"_design/\u9999", include_docs=True)
         ddocs = []
         for ddoc in all_ddocs:
             doc = ddoc['doc']
@@ -752,11 +753,16 @@ class Database(object):
         return {'ok': False}
 
     def raw_view(self, view_path, params):
-        if 'keys' in params:
-            keys = params.pop('keys')
-            return self.res.post(view_path, payload={ 'keys': keys }, **params)
+        params.pop('dynamic_properties', None)
+        if view_path == '_all_docs':
+            return self.cloudant_database.all_docs(**params)
         else:
-            return self.res.get(view_path, **params)
+            view_path = view_path.split('/')
+            assert len(view_path) == 4
+            ddoc = DesignDocument(self.cloudant_database, view_path[1])
+            ddoc.fetch()
+            view = ddoc.get_view(view_path[3])
+            return view(**params)
 
     def view(self, view_name, schema=None, wrapper=None, **params):
         """ get view results from database. viewname is generally
@@ -864,7 +870,7 @@ class ViewResults(object):
 
         """
         assert not (wrapper and schema)
-        wrap_doc = params.get('wrap_doc', schema is not None)
+        wrap_doc = params.pop('wrap_doc', schema is not None)
         if schema:
             schema_wrapper = maybe_schema_wrapper(schema, params)
             def row_wrapper(row):
@@ -954,7 +960,7 @@ class ViewResults(object):
                 pass
         self._dynamic_keys = []
 
-        self._result_cache = self.fetch_raw().json_body
+        self._result_cache = self.fetch_raw()
         assert isinstance(self._result_cache, dict), 'received an invalid ' \
             'response of type %s: %s' % \
             (type(self._result_cache), repr(self._result_cache))
