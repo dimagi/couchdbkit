@@ -215,36 +215,36 @@ class ClientDatabaseTestCase(unittest.TestCase):
             doc = db.get('http:%2F%2Fa')
         self.assertRaises(ResourceNotFound, not_found)
 
-    # def testFlush(self):
-    #     db = self.Server.create_db('couchdbkit_test')
-    #     doc1 = { '_id': 'test', 'string': 'test', 'number': 4 }
-    #     db.save_doc(doc1)
-    #     doc2 = { 'string': 'test', 'number': 4 }
-    #     db['test2'] = doc2
-    #     self.assert_(db.doc_exist('test'))
-    #     self.assert_(db.doc_exist('test2'))
-    #     design_doc = {
-    #         '_id': '_design/test',
-    #         'language': 'javascript',
-    #         'views': {
-    #             'all': {
-    #                 "map": """function(doc) { if (doc.docType == "test") { emit(doc._id, doc);
-    #         }}"""
-    #             }
-    #         }
-    #     }
-    #     db.save_doc(design_doc)
-    #     db.put_attachment(design_doc, 'test', 'test', 'test/plain')
-    #     self.assert_(len(db) == 3)
-    #     db.flush()
-    #     self.assert_(len(db) == 1)
-    #     self.assertFalse(db.doc_exist('test'))
-    #     self.assertFalse(db.doc_exist('test2'))
-    #     self.assert_(db.doc_exist('_design/test'))
-    #     ddoc = db.get("_design/test")
-    #     self.assert_('all' in ddoc['views'])
-    #     self.assert_('test' in ddoc['_attachments'])
-    #     del self.Server['couchdbkit_test']
+    def testFlush(self):
+        db = self.Server.create_db('couchdbkit_test')
+        doc1 = { '_id': 'test', 'string': 'test', 'number': 4 }
+        db.save_doc(doc1)
+        doc2 = { 'string': 'test', 'number': 4 }
+        db['test2'] = doc2
+        self.assert_(db.doc_exist('test'))
+        self.assert_(db.doc_exist('test2'))
+        design_doc = {
+            '_id': '_design/test',
+            'language': 'javascript',
+            'views': {
+                'all': {
+                    "map": """function(doc) { if (doc.docType == "test") { emit(doc._id, doc);
+            }}"""
+                }
+            }
+        }
+        db.save_doc(design_doc)
+        db.put_attachment(design_doc, 'test', 'test', 'test/plain')
+        self.assert_(len(db) == 3)
+        db.flush()
+        self.assert_(len(db) == 1)
+        self.assertFalse(db.doc_exist('test'))
+        self.assertFalse(db.doc_exist('test2'))
+        self.assert_(db.doc_exist('_design/test'))
+        ddoc = db.get("_design/test")
+        self.assert_('all' in ddoc['views'])
+        self.assert_('test' in ddoc['_attachments'])
+        del self.Server['couchdbkit_test']
 
     def testDbLen(self):
         db = self.Server.create_db('couchdbkit_test')
