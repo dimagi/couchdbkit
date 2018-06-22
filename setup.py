@@ -53,7 +53,7 @@ setup(
     install_requires = [
         'requests==2.18.4',
         'restkit>=4.2.2',
-        'jsonobject>=0.6.0',
+        'jsonobject==0.8.0',
         'cloudant==2.7.0',
         'six==1.11.0',
     ],
