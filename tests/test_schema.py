@@ -1799,7 +1799,7 @@ if support_setproperty:
                 class C(Document):
                     s = SetProperty(item_type=tuple)
             self.assertIn(
-                "item_type <type 'tuple'> not in set([", str(cm.exception))
+                "item_type <type 'tuple'> not in ", str(cm.exception))
 
 
         def testSetPropertyAssignment(self):
