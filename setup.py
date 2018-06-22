@@ -51,7 +51,6 @@ setup(
     zip_safe = False,
 
     install_requires = [
-        'requests==2.18.4',
         'restkit>=4.2.2',
         'jsonobject==0.8.0',
         'cloudant==2.7.0',
