@@ -4,7 +4,6 @@
 # See the NOTICE for more information.
 
 
-from __future__ import absolute_import
 from .base import ConsumerBase
 
 OLD_CONSUMER_URIS = dict(

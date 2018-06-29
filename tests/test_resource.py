@@ -3,7 +3,6 @@
 # This file is part of couchdbkit released under the MIT license. 
 # See the NOTICE for more information.
 #
-from __future__ import absolute_import
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import unittest
@@ -29,7 +28,7 @@ class ServerTestCase(unittest.TestCase):
 
     def testGetInfo(self):
         info = self.couchdb.get().json_body
-        self.assert_('version' in info)
+        self.assert_(info.has_key('version'))
         
     def testCreateDb(self):
         res = self.couchdb.put('/couchdkbit_test').json_body

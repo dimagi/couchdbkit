@@ -10,17 +10,13 @@ really belong anywhere else in the modules.
 """
 from __future__ import with_statement
 
-from __future__ import absolute_import
-from __future__ import print_function
 import codecs
 import string
 from hashlib import md5
 import os
 import re
 import sys
-import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
-import six
-from six.moves import range
+import urllib
 
 
 try:
@@ -127,15 +123,15 @@ def validate_dbname(name):
     """ validate dbname """
     if name in SPECIAL_DBS:
         return True
-    elif not VALID_DB_NAME.match(six.moves.urllib.parse.unquote(name)):
+    elif not VALID_DB_NAME.match(urllib.unquote(name)):
         raise ValueError("Invalid db name: '%s'" % name)
     return True
 
 def to_bytestring(s):
     """ convert to bytestring an unicode """
-    if not isinstance(s, six.string_types):
+    if not isinstance(s, basestring):
         return s
-    if isinstance(s, six.text_type):
+    if isinstance(s, unicode):
         return s.encode('utf-8')
     else:
         return s
@@ -199,7 +195,7 @@ def read_json(filename, use_environment=False):
     """
     try:
         data = read_file(filename, force_read=True)
-    except IOError as e:
+    except IOError, e:
         if e[0] == 2:
             return {}
         raise
@@ -210,7 +206,7 @@ def read_json(filename, use_environment=False):
     try:
         data = json.loads(data)
     except ValueError:
-        print("Json is invalid, can't load %s" % filename, file=sys.stderr)
+        print >>sys.stderr, "Json is invalid, can't load %s" % filename
         raise
     return data
 

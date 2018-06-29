@@ -6,7 +6,6 @@
 """ module that provides a Document object that allows you
 to map CouchDB document in Python statically, dynamically or both
 """
-from __future__ import absolute_import
 import copy
 
 import jsonobject
@@ -19,7 +18,6 @@ convert_property, \
 LazyDict, LazyList
 from ..exceptions import DuplicatePropertyError, ResourceNotFound, \
 ReservedWordError
-import six
 
 
 __all__ = ['ReservedWordError', 'DocumentSchema',
@@ -38,7 +36,7 @@ def check_reserved_words(attr_name):
             locals())
 
 def valid_id(value):
-    if isinstance(value, six.string_types) and not value.startswith('_'):
+    if isinstance(value, basestring) and not value.startswith('_'):
         return value
     raise TypeError('id "%s" is invalid' % value)
 
@@ -51,7 +49,7 @@ class SchemaProperties(jsonobject.JsonObjectMeta):
             doc_type_attr = (
                 super(SchemaProperties, mcs).__new__(mcs, '', bases, {})
             )._doc_type_attr
-        if isinstance(dct.get(doc_type_attr), six.string_types):
+        if isinstance(dct.get(doc_type_attr), basestring):
             doc_type = dct.pop(doc_type_attr)
         else:
             doc_type = name
@@ -63,7 +61,9 @@ class SchemaProperties(jsonobject.JsonObjectMeta):
         return cls
 
 
-class DocumentSchema(six.with_metaclass(SchemaProperties, jsonobject.JsonObject)):
+class DocumentSchema(jsonobject.JsonObject):
+
+    __metaclass__ = SchemaProperties
 
     _validate_required_lazily = True
     _doc_type_attr = 'doc_type'

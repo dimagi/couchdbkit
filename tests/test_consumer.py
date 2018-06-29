@@ -3,8 +3,6 @@
 # This file is part of couchdbkit released under the MIT license.
 # See the NOTICE for more information.
 #
-from __future__ import absolute_import
-from six.moves import range
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import threading

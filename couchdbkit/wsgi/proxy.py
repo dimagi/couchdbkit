@@ -3,8 +3,7 @@
 # This file is part of couchdbkit released under the MIT license. 
 # See the NOTICE for more information.
 
-from __future__ import absolute_import
-import six.moves.urllib.parse
+import urlparse
 
 from restkit.contrib.wsgi_proxy import HostProxy, ALLOWED_METHODS
 from webob import Request
@@ -35,7 +34,7 @@ class CouchdbProxy(object):
         req = Request(environ)
         if 'RAW_URI' in req.environ:
             # gunicorn so we can use real path non encoded
-            u = six.moves.urllib.parse.urlparse(req.environ['RAW_URI'])
+            u = urlparse.urlparse(req.environ['RAW_URI'])
             req.environ['PATH_INFO'] = u.path
             
         resp = self.do_proy(req, environ, start_response)

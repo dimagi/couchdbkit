@@ -4,7 +4,6 @@
 # See the NOTICE for more information.
 
 from __future__ import with_statement
-from __future__ import absolute_import
 import base64
 import copy
 from hashlib import md5
@@ -19,8 +18,6 @@ from ..exceptions import ResourceNotFound, DesignerError, \
 BulkSaveError
 from .macros import package_shows, package_views
 from .. import utils
-import six
-from six.moves import filter
 
 if os.name == 'nt':
     def _replace_backslash(name):
@@ -233,7 +230,7 @@ class FSDoc(object):
                             name = name[:-1]
                         dmanifest[name] = i
 
-                for vname, value in six.iteritems(self._doc['views']):
+                for vname, value in self._doc['views'].iteritems():
                     if value and isinstance(value, dict):
                         views[vname] = value
                     else:
@@ -449,7 +446,7 @@ def pushapps(path, dbs, atomic=True, export=False, couchapprc=False):
                 docs = [doc.doc(db) for doc in apps]
                 try:
                     db.save_docs(docs)
-                except BulkSaveError as e:
+                except BulkSaveError, e:
                     docs1 = []
                     for doc in e.errors:
                         try:
@@ -514,7 +511,7 @@ def pushdocs(path, dbs, atomic=True, export=False):
                         docs1.append(newdoc)
                 try:
                     db.save_docs(docs1)
-                except BulkSaveError as e:
+                except BulkSaveError, e:
                     # resolve conflicts
                     docs1 = []
                     for doc in e.errors:
@@ -586,7 +583,7 @@ def clone(db, docid, dest=None, rev=None):
                         break
 
 
-                    if isinstance(content, six.string_types):
+                    if isinstance(content, basestring):
                         _ref = md5(utils.to_bytestring(content)).hexdigest()
                         if objects and _ref in objects:
                             content = objects[_ref]
@@ -618,7 +615,7 @@ def clone(db, docid, dest=None, rev=None):
 
     # second pass for missing key or in case
     # manifest isn't in app
-    for key in six.iterkeys(doc):
+    for key in doc.iterkeys():
         if key.startswith('_'):
             continue
         elif key in ('couchapp'):
@@ -638,11 +635,11 @@ def clone(db, docid, dest=None, rev=None):
             vs_dir = os.path.join(path, key)
             if not os.path.isdir(vs_dir):
                 os.makedirs(vs_dir)
-            for vsname, vs_item in six.iteritems(doc[key]):
+            for vsname, vs_item in doc[key].iteritems():
                 vs_item_dir = os.path.join(vs_dir, vsname)
                 if not os.path.isdir(vs_item_dir):
                     os.makedirs(vs_item_dir)
-                for func_name, func in six.iteritems(vs_item):
+                for func_name, func in vs_item.iteritems():
                     filename = os.path.join(vs_item_dir, '%s.js' %
                             func_name)
                     utils.write_content(filename, func)
@@ -651,7 +648,7 @@ def clone(db, docid, dest=None, rev=None):
             showpath = os.path.join(path, key)
             if not os.path.isdir(showpath):
                 os.makedirs(showpath)
-            for func_name, func in six.iteritems(doc[key]):
+            for func_name, func in doc[key].iteritems():
                 filename = os.path.join(showpath, '%s.js' %
                         func_name)
                 utils.write_content(filename, func)
@@ -668,9 +665,9 @@ def clone(db, docid, dest=None, rev=None):
                 elif isinstance(doc[key], dict):
                     if not os.path.isdir(filedir):
                         os.makedirs(filedir)
-                    for field, value in six.iteritems(doc[key]):
+                    for field, value in doc[key].iteritems():
                         fieldpath = os.path.join(filedir, field)
-                        if isinstance(value, six.string_types):
+                        if isinstance(value, basestring):
                             if value.startswith('base64-encoded;'):
                                 value = base64.b64decode(content[15:])
                             utils.write_content(fieldpath, value)
@@ -678,7 +675,7 @@ def clone(db, docid, dest=None, rev=None):
                             utils.write_json(fieldpath + '.json', value)
                 else:
                     value = doc[key]
-                    if not isinstance(value, six.string_types):
+                    if not isinstance(value, basestring):
                         value = str(value)
                     utils.write_content(filedir, value)
 
@@ -693,7 +690,7 @@ def clone(db, docid, dest=None, rev=None):
         if not os.path.isdir(attachdir):
             os.makedirs(attachdir)
 
-        for filename in six.iterkeys(doc['_attachments']):
+        for filename in doc['_attachments'].iterkeys():
             if filename.startswith('vendor'):
                 attach_parts = utils.split_path(filename)
                 vendor_attachdir = os.path.join(path, attach_parts.pop(0),

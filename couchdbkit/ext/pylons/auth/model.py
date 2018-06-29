@@ -3,14 +3,12 @@
 # This file is part of couchdbkit released under the MIT license. 
 # See the NOTICE for more information.
 
-from __future__ import absolute_import
 from hashlib import sha256
 import os
 
 
 from .... import Document, SchemaListProperty, StringProperty, \
 StringListProperty
-import six
 
 class Permission(Document):
     name = StringProperty(required=True)
@@ -30,7 +28,7 @@ class User(Document):
 
     @staticmethod
     def _hash_password(cleartext):
-        if isinstance(cleartext, six.text_type):
+        if isinstance(cleartext, unicode):
             password_8bit = cleartext.encode('UTF-8')
         else:
             password_8bit = cleartext
@@ -41,7 +39,7 @@ class User(Document):
         hash.update(password_8bit + salt.hexdigest())
         hashed_password = salt.hexdigest() + hash.hexdigest()
 
-        if not isinstance(hashed_password, six.text_type):
+        if not isinstance(hashed_password, unicode):
             hashed_password = hashed_password.decode('UTF-8')
         return hashed_password
 

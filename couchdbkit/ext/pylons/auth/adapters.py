@@ -3,7 +3,6 @@
 # This file is part of couchdbkit released under the MIT license.
 # See the NOTICE for more information.
 
-from __future__ import absolute_import
 from repoze.what.adapters import BaseSourceAdapter
 from repoze.who.interfaces import IAuthenticator
 from repoze.who.interfaces import IMetadataProvider
