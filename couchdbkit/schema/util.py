@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from couchdbkit.exceptions import DocTypeError
 
 
@@ -24,7 +23,7 @@ def doctype_attr_of(classes):
 
 
 def get_multi_wrapper(classes):
-    doctype_attr = doctype_attr_of(list(classes.values()))
+    doctype_attr = doctype_attr_of(classes.values())
 
     def wrap(doc):
         doc_type = doc.get(doctype_attr)

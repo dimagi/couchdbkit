@@ -3,11 +3,10 @@
 # This file is part of couchdbkit released under the MIT license. 
 # See the NOTICE for more information.
 
-from __future__ import absolute_import
 import sys
 import StringIO
 import traceback
-from six.moves.urllib.parse import unquote
+from urllib import unquote
 
 from restkit.util import url_encode
 

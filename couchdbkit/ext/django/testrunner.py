@@ -3,8 +3,6 @@
 # This file is part of couchdbkit released under the MIT license. 
 # See the NOTICE for more information.
 
-from __future__ import absolute_import
-from __future__ import print_function
 from django.test.simple import DjangoTestSuiteRunner
 from django.conf import settings
 
@@ -34,7 +32,7 @@ class CouchDbKitTestSuiteRunner(DjangoTestSuiteRunner):
         return test_db
 
     def setup_databases(self, **kwargs):
-        print("overridding the couchdbkit database settings to use a test database!")
+        print "overridding the couchdbkit database settings to use a test database!"
                  
         # first pass: just implement this as a monkey-patch to the loading module
         # overriding all the existing couchdb settings
@@ -77,9 +75,9 @@ class CouchDbKitTestSuiteRunner(DjangoTestSuiteRunner):
             try:
                 db.server.delete_db(db.dbname)
                 deleted_databases.append(db.dbname)
-                print("deleted database %s for %s" % (db.dbname, app_label))
+                print "deleted database %s for %s" % (db.dbname, app_label)
             except ResourceNotFound:
-                print("database %s not found for %s! it was probably already deleted." % (db.dbname, app_label))
+                print "database %s not found for %s! it was probably already deleted." % (db.dbname, app_label)
         if skipcount:
-            print("skipped deleting %s app databases that were already deleted" % skipcount)
+            print "skipped deleting %s app databases that were already deleted" % skipcount
         return super(CouchDbKitTestSuiteRunner, self).teardown_databases(old_config, **kwargs)

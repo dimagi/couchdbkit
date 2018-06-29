@@ -3,7 +3,6 @@
 # This file is part of couchdbkit released under the MIT license. 
 # See the NOTICE for more information.
 
-from __future__ import absolute_import
 import sys
 
 from .utils import json

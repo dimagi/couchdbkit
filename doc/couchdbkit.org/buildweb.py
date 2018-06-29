@@ -17,8 +17,6 @@
 
 from __future__ import with_statement
 
-from __future__ import absolute_import
-from __future__ import print_function
 import codecs
 import datetime
 import os
@@ -29,7 +27,6 @@ import sys
 from jinja2 import Environment
 from jinja2.loaders import FileSystemLoader
 from jinja2.utils import open_if_exists
-import six
 try:
     import markdown
 except ImportError:
@@ -109,7 +106,7 @@ class Site(object):
         files = [f for f in files if os.path.splitext(f)[1] in conf.EXTENSIONS]
         blog = None
         for f in files:
-            print("process %s" % f)
+            print "process %s" % f
             page = Page(self, f, current_dir, target_path)
             if page.is_blog() and f == "index.txt" or f == "archives.txt":
                 continue
@@ -122,14 +119,14 @@ class Site(object):
             if not source_newer(page.finput, page.foutput) and f != "index.txt":
                 continue
                 
-            print("write %s" % page.foutput)
+            print "write %s" % page.foutput
             try:
                 f = codecs.open(page.foutput, 'w', 'utf-8')
                 try:
                     f.write(page.render())
                 finally:
                     f.close()
-            except (IOError, OSError) as err:
+            except (IOError, OSError), err:
                 raise
             self.sitemap.append(page)
         if blog is not None:
@@ -221,7 +218,7 @@ class Blog(object):
             archives_page = None
             
         if not os.path.isfile(index_page.finput):
-            raise IOError("index.txt isn't found in %s" % self.current_dir)
+            raise IOError, "index.txt isn't found in %s" % self.current_dir
         
             
         self.pages.sort(lambda a, b: a.headers['pubDate'] - b.headers['pubDate'], reverse=True)
@@ -252,7 +249,7 @@ class Blog(object):
                     f.write(page.render())
                 finally:
                     f.close()
-            except (IOError, OSError) as err:
+            except (IOError, OSError), err:
                 raise
             self.site.sitemap.append(page)
 
@@ -297,20 +294,20 @@ class Page(object):
                 (header_lines,body) = raw.split("\n\n", 1)
                 for header in header_lines.split("\n"):
                     (name, value) = header.split(": ", 1)
-                    headers[name.lower()] = six.text_type(value.strip())
+                    headers[name.lower()] = unicode(value.strip())
                 self.headers = headers
                 self.headers['pubDate'] = os.stat(self.finput)[ST_CTIME]
                 self.headers['published'] = datetime.datetime.fromtimestamp(self.headers['pubDate'])
                 self.body = body
                 content_type = self.headers.get('content_type', conf.CONTENT_TYPE)
-                if content_type in list(self.content_types.keys()): 
+                if content_type in self.content_types.keys(): 
                     self.foutput = os.path.join(self.target_path, 
                             "%s.%s" % (os.path.splitext(self.filename)[0], self.files_ext[content_type]))
                     self.url = self.get_url()
                 else:
-                    raise TypeError("Unknown content_type") 
+                    raise TypeError, "Unknown content_type" 
             except:
-                raise TypeError("Invalid page file format for %s" % self.finput)
+                raise TypeError, "Invalid page file format for %s" % self.finput
             self.parsed = True
                 
     def is_blog(self):
@@ -323,11 +320,11 @@ class Page(object):
             self.parse()
         template = self.headers.get('template', conf.DEFAULT_TEMPLATE)
         content_type = self.headers.get('content_type', conf.CONTENT_TYPE)
-        if content_type in list(self.content_types.keys()):
+        if content_type in self.content_types.keys():
             fun = getattr(self, "render_%s" % content_type)
             return fun(template)
         else:
-            raise TypeError("Unknown content_type") 
+            raise TypeError, "Unknown content_type" 
 
     def _render_html(self, template, body):
         kwargs = {
@@ -344,13 +341,13 @@ class Page(object):
         
     def render_markdown(self, template):
         if markdown is None:
-            raise TypeError("markdown isn't suported")
+            raise TypeError, "markdown isn't suported"
         body = convert_markdown(self.body)
         return self._render_html(template, body)
         
     def render_textile(self, template):
         if textile is None:
-            raise TypeError("textile isn't suported")
+            raise TypeError, "textile isn't suported"
         body = convert_textile(self.body)
         return self._render_html(template, body)
         

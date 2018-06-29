@@ -13,7 +13,6 @@ the appropriate options to ``use_setuptools()``.
 
 This file can also be run as a script to install or upgrade setuptools.
 """
-from __future__ import absolute_import
 import os
 import sys
 import time
@@ -179,7 +178,7 @@ def download_setuptools(version=DEFAULT_VERSION, download_base=DEFAULT_URL,
     try:
         from urllib.request import urlopen
     except ImportError:
-        from six.moves.urllib.request import urlopen
+        from urllib2 import urlopen
     tgz_name = "distribute-%s.tar.gz" % version
     url = download_base + tgz_name
     saveto = os.path.join(to_dir, tgz_name)
