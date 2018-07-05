@@ -38,6 +38,7 @@ import cloudant
 from cloudant.client import CouchDB
 from cloudant.database import CouchDatabase
 from cloudant.document import Document
+from cloudant.error import CloudantClientException
 from cloudant.security_document import SecurityDocument
 from requests.exceptions import HTTPError
 from restkit.util import url_quote
@@ -175,7 +176,10 @@ class Server(object):
         """
         Delete database
         """
-        del self[dbname]
+        try:
+            del self[dbname]
+        except CloudantClientException as e:
+            raise ResourceNotFound(six.text_type(e))
 
     #TODO: maintain list of replications
     def replicate(self, source, target, **params):
