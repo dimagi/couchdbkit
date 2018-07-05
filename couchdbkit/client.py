@@ -178,8 +178,8 @@ class Server(object):
         """
         try:
             del self[dbname]
-        except CloudantClientException:
-            raise ResourceNotFound
+        except CloudantClientException as e:
+            raise ResourceNotFound(six.text_type(e))
 
     #TODO: maintain list of replications
     def replicate(self, source, target, **params):
