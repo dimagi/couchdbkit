@@ -513,7 +513,12 @@ class Database(object):
         @return rev: str, the last revision of document.
         """
         response = self._request_session.head(self._database_path(docid))
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                raise ResourceNotFound
+            raise
         return response.headers['ETag'].strip('"')
 
     def save_doc(self, doc, encode_attachments=True, force_update=False,
