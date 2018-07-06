@@ -575,7 +575,11 @@ class Database(object):
                 doc[key] = value
         else:
             doc.update(doc1)
-        return res
+        return {
+            'id': res['_id'],
+            'rev': res['_rev'],
+            'ok': True,
+        }
 
     def save_docs(self, docs, use_uuids=True, new_edits=None, **params):
         """ bulk save. Modify Multiple Documents With a Single Request
