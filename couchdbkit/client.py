@@ -513,6 +513,8 @@ class Database(object):
         @return rev: str, the last revision of document.
         """
         response = self._request_session.head(self._database_path(docid))
+        if response.status_code == 404:
+            raise ResourceNotFound
         response.raise_for_status()
         return response.headers['ETag'].strip('"')
 
