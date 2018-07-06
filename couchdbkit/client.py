@@ -415,6 +415,7 @@ class Database(object):
             if e.response.status_code == 404:
                 raise ResourceNotFound
             raise
+        doc = dict(doc)
         if wrapper is not None:
             if not callable(wrapper):
                 raise TypeError("wrapper isn't a callable")
