@@ -27,6 +27,8 @@ Example:
 
 """
 from __future__ import absolute_import
+
+import base64
 from collections import deque
 from copy import deepcopy
 from itertools import groupby
@@ -405,6 +407,7 @@ class Database(object):
             if not hasattr(schema, "wrap"):
                 raise TypeError("invalid schema")
             wrapper = schema.wrap
+        attachments = params.get('attachments', False)
 
         if isinstance(docid, six.text_type):
             docid = docid.encode('utf-8')
@@ -415,14 +418,22 @@ class Database(object):
             if e.response.status_code == 404:
                 raise ResourceNotFound(json.loads(e.response.content)['reason'])
             raise
-        doc = dict(doc)
+        doc_dict = dict(doc)
+
+        if attachments and '_attachments' in doc_dict:
+            for attachment_name in doc_dict['_attachments']:
+                attachment_data = doc.get_attachment(attachment_name, attachment_type='binary')
+                doc_dict['_attachments'][attachment_name]['data'] = base64.b64encode(attachment_data)
+                del doc_dict['_attachments'][attachment_name]['stub']
+                del doc_dict['_attachments'][attachment_name]['length']
+
         if wrapper is not None:
             if not callable(wrapper):
                 raise TypeError("wrapper isn't a callable")
 
-            return wrapper(doc)
+            return wrapper(doc_dict)
 
-        return doc
+        return doc_dict
     get = open_doc
 
     def list(self, list_name, view_name, **params):
