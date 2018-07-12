@@ -726,7 +726,10 @@ class Database(object):
             couch_doc['_rev'] = doc1['_rev']
         elif isinstance(doc1, six.string_types): # we get a docid
             couch_doc = Document(self.cloudant_database, doc1)
-            couch_doc['_rev'] = self.get_rev(doc1)
+            try:
+                couch_doc['_rev'] = self.get_rev(doc1)
+            except ResourceNotFound:
+                raise ResourceConflict
 
         # manual request because cloudant library doesn't return result
         res = self._request_session.delete(
