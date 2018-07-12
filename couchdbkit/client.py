@@ -530,7 +530,8 @@ class Database(object):
             if e.response.status_code == 404:
                 raise ResourceNotFound
             raise
-        return response.headers['ETag'].strip('"')
+        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag
+        return response.headers['ETag'].strip('"').lstrip('W/"')
 
     def save_doc(self, doc, encode_attachments=True, force_update=False,
             **params):
