@@ -530,7 +530,7 @@ class Database(object):
             if e.response.status_code == 404:
                 raise ResourceNotFound
             raise
-        return response.headers['ETag'].strip('"').strip('W/"')
+        return response.headers['ETag'].strip('"').lstrip('W/"')
 
     def save_doc(self, doc, encode_attachments=True, force_update=False,
             **params):
