@@ -563,7 +563,17 @@ class Database(object):
             couch_doc = Document(self.cloudant_database, docid)
             couch_doc.update(doc1)
             try:
-                couch_doc.save()
+                # Copied from Document.save to ensure that a deleted doc cannot be saved.
+                headers = {}
+                headers.setdefault('Content-Type', 'application/json')
+                put_resp = couch_doc.r_session.put(
+                    couch_doc.document_url,
+                    data=couch_doc.json(),
+                    headers=headers
+                )
+                put_resp.raise_for_status()
+                data = put_resp.json()
+                super(Document, couch_doc).__setitem__('_rev', data['rev'])
             except HTTPError as e:
                 if e.response.status_code != 409:
                     raise
@@ -716,7 +726,10 @@ class Database(object):
             couch_doc['_rev'] = doc1['_rev']
         elif isinstance(doc1, six.string_types): # we get a docid
             couch_doc = Document(self.cloudant_database, doc1)
-            couch_doc['_rev'] = self.get_rev(doc1)
+            try:
+                couch_doc['_rev'] = self.get_rev(doc1)
+            except ResourceNotFound:
+                raise ResourceConflict
 
         # manual request because cloudant library doesn't return result
         res = self._request_session.delete(
