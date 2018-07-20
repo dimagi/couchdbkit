@@ -78,12 +78,14 @@ More fields types will be supported soon.
 """
 
 
+from __future__ import absolute_import
+from collections import OrderedDict
 from django.utils.text import capfirst
-from django.utils.datastructures import SortedDict
 from django.forms.util import ErrorList
 from django.forms.forms import BaseForm, get_declared_fields
 from django.forms import fields as f
 from django.forms.widgets import media_property
+import six
 
 FIELDS_PROPERTES_MAPPING = {
     "StringProperty": f.CharField,
@@ -120,7 +122,7 @@ def document_to_dict(instance, properties=None, exclude=None):
 
 def fields_for_document(document, properties=None, exclude=None):
     """
-    Returns a ``SortedDict`` containing form fields for the given document.
+    Returns a ``OrderedDict`` containing form fields for the given document.
 
     ``properties`` is an optional list of properties names. If provided, 
     only the named properties will be included in the returned properties.
@@ -136,7 +138,7 @@ def fields_for_document(document, properties=None, exclude=None):
         values = [document._properties[prop] for prop in properties if \
                                                 prop in document._properties]
     else:
-        values = document._properties.values()
+        values = list(document._properties.values())
         values.sort(lambda a, b: cmp(a.creation_counter, b.creation_counter))
     
     for prop in values: 
@@ -162,7 +164,7 @@ def fields_for_document(document, properties=None, exclude=None):
                 
             field_list.append((prop.name, 
                 FIELDS_PROPERTES_MAPPING[property_class_name](**defaults)))
-    return SortedDict(field_list)
+    return OrderedDict(field_list)
 
 class DocumentFormOptions(object):
     def __init__(self, options=None):
@@ -263,6 +265,5 @@ class BaseDocumentForm(BaseForm):
         
         return self.instance
             
-class DocumentForm(BaseDocumentForm):
+class DocumentForm(six.with_metaclass(DocumentFormMetaClass, BaseDocumentForm)):
     """ The document form object """
-    __metaclass__ = DocumentFormMetaClass          

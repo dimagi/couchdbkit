@@ -3,14 +3,13 @@
 # This file is part of couchdbkit released under the MIT license.
 # See the NOTICE for more information.
 #
+from __future__ import absolute_import
+from six.moves import range
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import threading
 import time
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from couchdbkit import *
 from couchdbkit.changes import ChangesStream, fold, foreach

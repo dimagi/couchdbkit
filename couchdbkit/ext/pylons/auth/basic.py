@@ -3,6 +3,7 @@
 # This file is part of couchdbkit released under the MIT license. 
 # See the NOTICE for more information.
 
+from __future__ import absolute_import
 import logging
 from paste.request import parse_dict_querystring, parse_formvars
 from paste.httpexceptions import HTTPUnauthorized

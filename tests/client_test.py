@@ -3,13 +3,12 @@
 # This file is part of couchdbkit released under the MIT license.
 # See the NOTICE for more information.
 #
+from __future__ import absolute_import
+import six
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import copy
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from couchdbkit import ResourceNotFound, RequestFailed, \
 ResourceConflict
@@ -31,7 +30,7 @@ class ClientServerTestCase(unittest.TestCase):
 
     def testGetInfo(self):
         info = self.Server.info()
-        self.assert_(info.has_key('version'))
+        self.assert_('version' in info)
 
     def testCreateDb(self):
         res = self.Server.create_db('couchdbkit_test')
@@ -79,7 +78,7 @@ class ClientServerTestCase(unittest.TestCase):
 
     def testGetUUIDS(self):
         uuid = self.Server.next_uuid()
-        self.assert_(isinstance(uuid, basestring) == True)
+        self.assert_(isinstance(uuid, six.string_types) == True)
         self.assert_(len(self.Server._uuids) == 999)
         uuid2 = self.Server.next_uuid()
         self.assert_(uuid != uuid2)
@@ -500,18 +499,18 @@ class ClientDatabaseTestCase(unittest.TestCase):
     def testMultipleDocCOnflict(self):
         db = self.Server.create_db('couchdbkit_test')
         docs = [
-                { 'string': 'test', 'number': 4 },
-                { 'string': 'test', 'number': 5 },
-                { 'string': 'test', 'number': 4 },
-                { 'string': 'test', 'number': 6 }
+            {'string': 'test', 'number': 4},
+            {'string': 'test', 'number': 5},
+            {'string': 'test', 'number': 4},
+            {'string': 'test', 'number': 6}
         ]
         db.bulk_save(docs)
-        self.assert_(len(db) == 4)
+        self.assertEqual(len(db), 4)
         docs1 = [
-                docs[0],
-                docs[1],
-                {'_id': docs[2]['_id'], 'string': 'test', 'number': 4 },
-                {'_id': docs[3]['_id'], 'string': 'test', 'number': 6 }
+            docs[0],
+            docs[1],
+            {'_id': docs[2]['_id'], 'string': 'test', 'number': 4},
+            {'_id': docs[3]['_id'], 'string': 'test', 'number': 6}
         ]
 
         self.assertRaises(BulkSaveError, db.bulk_save, docs1)
@@ -519,38 +518,20 @@ class ClientDatabaseTestCase(unittest.TestCase):
         docs2 = [
             docs1[0],
             docs1[1],
-            {'_id': docs[2]['_id'], 'string': 'test', 'number': 4 },
-            {'_id': docs[3]['_id'], 'string': 'test', 'number': 6 }
+            {'_id': docs[2]['_id'], 'string': 'test', 'number': 4},
+            {'_id': docs[3]['_id'], 'string': 'test', 'number': 6}
         ]
         doc23 = docs2[3].copy()
         all_errors = []
         try:
             db.bulk_save(docs2)
-        except BulkSaveError, e:
+        except BulkSaveError as e:
             all_errors = e.errors
 
-        self.assert_(len(all_errors) == 2)
-        self.assert_(all_errors[0]['error'] == 'conflict')
-        self.assert_(doc23 == docs2[3])
-
-        docs3 = [
-            docs2[0],
-            docs2[1],
-            {'_id': docs[2]['_id'], 'string': 'test', 'number': 4 },
-            {'_id': docs[3]['_id'], 'string': 'test', 'number': 6 }
-        ]
-
-        doc33 = docs3[3].copy()
-        all_errors2 = []
-        try:
-            db.bulk_save(docs3, all_or_nothing=True)
-        except BulkSaveError, e:
-            all_errors2 = e.errors
-
-        self.assert_(len(all_errors2) == 0)
-        self.assert_(doc33 != docs3[3])
+        self.assertEqual(len(all_errors), 2)
+        self.assertEqual(all_errors[0]['error'], 'conflict')
+        self.assertEqual(doc23, docs2[3])
         del self.Server['couchdbkit_test']
-
 
     def testCopy(self):
         db = self.Server.create_db('couchdbkit_test')
@@ -584,8 +565,9 @@ class ClientDatabaseTestCase(unittest.TestCase):
 
     def testSetSecurity(self):
         db = self.Server.create_db('couchdbkit_test')
-        res = db.set_security({"meta": "test"})
-        self.assert_(res['ok'] == True)
+        sec_doc = {"meta": "test"}
+        res = db.set_security(sec_doc)
+        self.assertEquals(res, sec_doc)
         del self.Server['couchdbkit_test']
 
     def testGetSecurity(self):
@@ -691,26 +673,6 @@ class ClientViewTestCase(unittest.TestCase):
         count = db.view('/test/all').count()
         self.assert_(count == 2)
         del self.Server['couchdbkit_test']
-
-    def testTemporaryView(self):
-        db = self.Server.create_db('couchdbkit_test')
-        # save 2 docs
-        doc1 = { '_id': 'test', 'string': 'test', 'number': 4,
-                'docType': 'test' }
-        db.save_doc(doc1)
-        doc2 = { '_id': 'test2', 'string': 'test', 'number': 2,
-                    'docType': 'test'}
-        db.save_doc(doc2)
-
-        design_doc = {
-            "map": """function(doc) { if (doc.docType == "test") { emit(doc._id, doc);
-}}"""
-        }
-
-        results = db.temp_view(design_doc)
-        self.assert_(len(results) == 2)
-        del self.Server['couchdbkit_test']
-
 
     def testView2(self):
         db = self.Server.create_db('couchdbkit_test')
@@ -862,4 +824,3 @@ class ClientViewTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

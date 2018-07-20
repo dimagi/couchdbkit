@@ -6,17 +6,23 @@
 """ module that provides a Document object that allows you
 to map CouchDB document in Python statically, dynamically or both
 """
+from __future__ import absolute_import
+import copy
 
-
+import jsonobject
+from jsonobject.exceptions import DeleteNotAllowed
+from couchdbkit.utils import ProxyDict
+from ..exceptions import ResourceNotFound, ReservedWordError
 from . import properties as p
-from .properties import value_to_python, \
-convert_property, MAP_TYPES_PROPERTIES, ALLOWED_PROPERTY_TYPES, \
+from .properties import \
+convert_property, \
 LazyDict, LazyList
 from ..exceptions import DuplicatePropertyError, ResourceNotFound, \
 ReservedWordError
+import six
 
 
-__all__ = ['ReservedWordError', 'ALLOWED_PROPERTY_TYPES', 'DocumentSchema',
+__all__ = ['ReservedWordError', 'DocumentSchema',
         'SchemaProperties', 'DocumentBase', 'QueryMixin', 'AttachmentMixin',
         'Document', 'StaticDocument', 'valid_id']
 
@@ -32,382 +38,76 @@ def check_reserved_words(attr_name):
             locals())
 
 def valid_id(value):
-    if isinstance(value, basestring) and not value.startswith('_'):
+    if isinstance(value, six.string_types) and not value.startswith('_'):
         return value
     raise TypeError('id "%s" is invalid' % value)
 
-class SchemaProperties(type):
 
-    def __new__(cls, name, bases, attrs):
-        # init properties
-        properties = {}
-        defined = set()
-        for base in bases:
-            if hasattr(base, '_properties'):
-                property_keys = base._properties.keys()
-                duplicate_properties = defined.intersection(property_keys)
-                if duplicate_properties:
-                    raise DuplicatePropertyError(
-                        'Duplicate properties in base class %s already defined: %s' % (base.__name__, list(duplicate_properties)))
-                defined.update(property_keys)
-                properties.update(base._properties)
-
-        doc_type = attrs.get('doc_type', False)
-        if not doc_type:
-            doc_type = name
+class SchemaProperties(jsonobject.JsonObjectMeta):
+    def __new__(mcs, name, bases, dct):
+        if '_doc_type_attr' in dct:
+            doc_type_attr = dct['_doc_type_attr']
         else:
-            del attrs['doc_type']
-
-        attrs['_doc_type'] = doc_type
-
-        for attr_name, attr in attrs.items():
-            # map properties
-            if isinstance(attr, p.Property):
-                check_reserved_words(attr_name)
-                if attr_name in defined:
-                    raise DuplicatePropertyError('Duplicate property: %s' % attr_name)
-                properties[attr_name] = attr
-                attr.__property_config__(cls, attr_name)
-            # python types
-            elif type(attr) in MAP_TYPES_PROPERTIES and \
-                    not attr_name.startswith('_') and \
-                    attr_name not in _NODOC_WORDS:
-                check_reserved_words(attr_name)
-                if attr_name in defined:
-                    raise DuplicatePropertyError('Duplicate property: %s' % attr_name)
-                prop = MAP_TYPES_PROPERTIES[type(attr)](default=attr)
-                properties[attr_name] = prop
-                prop.__property_config__(cls, attr_name)
-                attrs[attr_name] = prop
-
-        attrs['_properties'] = properties
-        return type.__new__(cls, name, bases, attrs)
+            doc_type_attr = (
+                super(SchemaProperties, mcs).__new__(mcs, '', bases, {})
+            )._doc_type_attr
+        if isinstance(dct.get(doc_type_attr), six.string_types):
+            doc_type = dct.pop(doc_type_attr)
+        else:
+            doc_type = name
+        dct[doc_type_attr] = jsonobject.StringProperty(
+            default=lambda self: self._doc_type
+        )
+        cls = super(SchemaProperties, mcs).__new__(mcs, name, bases, dct)
+        cls._doc_type = doc_type
+        return cls
 
 
-class DocumentSchema(object):
-    __metaclass__ = SchemaProperties
+class DocumentSchema(six.with_metaclass(SchemaProperties, jsonobject.JsonObject)):
 
-    _dynamic_properties = None
-    _allow_dynamic_properties = True
-    _doc = None
-    _db = None
+    _validate_required_lazily = True
     _doc_type_attr = 'doc_type'
 
-    def __init__(self, _d=None, **properties):
-        self._dynamic_properties = {}
-        self._doc = {}
+    @property
+    def _doc(self):
+        return ProxyDict(self, self._obj)
 
-        if _d is not None:
-            if not isinstance(_d, dict):
-                raise TypeError('_d should be a dict')
-            properties.update(_d)
-
-        doc_type = getattr(self, '_doc_type', self.__class__.__name__)
-        self._doc[self._doc_type_attr] = doc_type
-
-        for prop in self._properties.values():
-            if prop.name in properties:
-                value = properties.pop(prop.name)
-                if value is None:
-                    value = prop.default_value()
-            else:
-                value = prop.default_value()
-            prop.__property_init__(self, value)
-            self.__dict__[prop.name] = value
-
-        _dynamic_properties = properties.copy()
-        for attr_name, value in _dynamic_properties.iteritems():
-            if attr_name not in self._properties \
-                    and value is not None:
-                if isinstance(value, p.Property):
-                    value.__property_config__(self, attr_name)
-                    value.__property_init__(self, value.default_value())
-                elif isinstance(value, DocumentSchema):
-                    from couchdbkit.schema import SchemaProperty
-                    value = SchemaProperty(value)
-                    value.__property_config__(self, attr_name)
-                    value.__property_init__(self, value.default_value())
-
-
-                setattr(self, attr_name, value)
-                # remove the kwargs to speed stuff
-                del properties[attr_name]
+    @property
+    def _dynamic_properties(self):
+        from jsonobject.base import get_dynamic_properties
+        return get_dynamic_properties(self)
 
     def dynamic_properties(self):
-        """ get dict of dynamic properties """
-        if self._dynamic_properties is None:
-            return {}
         return self._dynamic_properties.copy()
 
-    @classmethod
-    def properties(cls):
-        """ get dict of defined properties """
-        return cls._properties.copy()
-
-    def all_properties(self):
-        """ get all properties.
-        Generally we just need to use keys"""
-        all_properties = self._properties.copy()
-        all_properties.update(self.dynamic_properties())
-        return all_properties
-
-    def to_json(self):
-        if self._doc.get(self._doc_type_attr) is None:
-            doc_type = getattr(self, '_doc_type', self.__class__.__name__)
-            self._doc[self._doc_type_attr] = doc_type
-        return self._doc
-
-    #TODO: add a way to maintain custom dynamic properties
-    def __setattr__(self, key, value):
-        """
-        override __setattr__ . If value is in dir, we just use setattr.
-        If value is not known (dynamic) we test if type and name of value
-        is supported (in ALLOWED_PROPERTY_TYPES, Property instance and not
-        start with '_') a,d add it to `_dynamic_properties` dict. If value is
-        a list or a dict we use LazyList and LazyDict to maintain in the value.
-        """
-
-        if key == "_id" and valid_id(value):
-            self._doc['_id'] = value
-        elif key == "_deleted":
-            self._doc["_deleted"] = value
-        elif key == "_attachments":
-            if key not in self._doc or not value:
-                self._doc[key] = {}
-            elif not isinstance(self._doc[key], dict):
-                self._doc[key] = {}
-            value = LazyDict(self._doc[key], init_vals=value)
-        else:
-            check_reserved_words(key)
-            if not hasattr( self, key ) and not self._allow_dynamic_properties:
-                raise AttributeError("%s is not defined in schema (not a valid property)" % key)
-
-            elif not key.startswith('_') and \
-                    key not in self.properties() and \
-                    key not in dir(self):
-                if type(value) not in ALLOWED_PROPERTY_TYPES and \
-                        not isinstance(value, (p.Property,)):
-                    raise TypeError("Document Schema cannot accept values of type '%s'." %
-                            type(value).__name__)
-
-                if self._dynamic_properties is None:
-                    self._dynamic_properties = {}
-
-                if isinstance(value, dict):
-                    if key not in self._doc or not value:
-                        self._doc[key] = {}
-                    elif not isinstance(self._doc[key], dict):
-                        self._doc[key] = {}
-                    value = LazyDict(self._doc[key], init_vals=value)
-                elif isinstance(value, list):
-                    if key not in self._doc or not value:
-                        self._doc[key] = []
-                    elif not isinstance(self._doc[key], list):
-                        self._doc[key] = []
-                    value = LazyList(self._doc[key], init_vals=value)
-
-                self._dynamic_properties[key] = value
-
-                if not isinstance(value, (p.Property,)) and \
-                        not isinstance(value, dict) and \
-                        not isinstance(value, list):
-                    if callable(value):
-                        value = value()
-                    self._doc[key] = convert_property(value)
-            else:
-                object.__setattr__(self, key, value)
-
-    def __delattr__(self, key):
-        """ delete property
-        """
-        if key in self._doc:
-            del self._doc[key]
-
-        if self._dynamic_properties and key in self._dynamic_properties:
-            del self._dynamic_properties[key]
-        else:
-            object.__delattr__(self, key)
-
-    def __getattr__(self, key):
-        """ get property value
-        """
-        if self._dynamic_properties and key in self._dynamic_properties:
-            return self._dynamic_properties[key]
-        elif key  in ('_id', '_rev', '_attachments', 'doc_type'):
-            return self._doc.get(key)
+    def __delitem__(self, key):
         try:
-            return self.__dict__[key]
-        except KeyError, e:
+            super(DocumentSchema, self).__delitem__(key)
+        except DeleteNotAllowed:
+            self[key] = None
+
+    def __delattr__(self, name):
+        try:
+            super(DocumentSchema, self).__delattr__(name)
+        except DeleteNotAllowed:
+            setattr(self, name, None)
+
+    def __getitem__(self, item):
+        try:
+            return super(DocumentSchema, self).__getitem__(item)
+        except KeyError as e:
             raise AttributeError(e)
 
-    def __getitem__(self, key):
-        """ get property value
-        """
-        try:
-            attr = getattr(self, key)
-            if callable(attr):
-                raise AttributeError("existing instance method")
-            return attr
-        except AttributeError:
-            if key in self._doc:
-                return self._doc[key]
-            raise
-
-    def __setitem__(self, key, value):
-        """ add a property
-        """
-        setattr(self, key, value)
-
-
-    def __delitem__(self, key):
-        """ delete a property
-        """
-        try:
-            delattr(self, key)
-        except AttributeError, e:
-            raise KeyError, e
-
-
-    def __contains__(self, key):
-        """ does object contain this propery ?
-
-        @param key: name of property
-
-        @return: True if key exist.
-        """
-        if key in self.all_properties():
-            return True
-        elif key in self._doc:
-            return True
-        return False
-
-    def __iter__(self):
-        """ iter document instance properties
-        """
-        for k in self.all_properties().keys():
-            yield k, self[k]
-        raise StopIteration
-
-    iteritems = __iter__
-
-    def items(self):
-        """ return list of items
-        """
-        return [(k, self[k]) for k in self.all_properties().keys()]
-
-
-    def __len__(self):
-        """ get number of properties
-        """
-        return len(self._doc or ())
-
-    def __getstate__(self):
-        """ let pickle play with us """
-        obj_dict = self.__dict__.copy()
-        return obj_dict
-
-    @classmethod
-    def wrap(cls, data):
-        """ wrap `data` dict in object properties """
-        instance = cls()
-        instance._doc = data
-        for prop in instance._properties.values():
-            if prop.name in data:
-                value = data[prop.name]
-                if value is not None:
-                    value = prop.to_python(value)
-                else:
-                    value = prop.default_value()
-            else:
-                value = prop.default_value()
-            prop.__property_init__(instance, value)
-
-        if cls._allow_dynamic_properties:
-            for attr_name, value in data.iteritems():
-                if attr_name in instance.properties():
-                    continue
-                if value is None:
-                    continue
-                elif attr_name.startswith('_'):
-                    continue
-                elif attr_name == cls._doc_type_attr:
-                    continue
-                else:
-                    value = value_to_python(value)
-                    setattr(instance, attr_name, value)
-        return instance
-    from_json = wrap
-
-    def validate(self, required=True):
-        """ validate a document """
-        for attr_name, value in self._doc.items():
-            if attr_name in self._properties:
-                self._properties[attr_name].validate(
-                        getattr(self, attr_name), required=required)
-        return True
-
-    def clone(self, **kwargs):
-        """ clone a document """
-        kwargs.update(self._dynamic_properties)
-        obj = self.__class__(**kwargs)
-        obj._doc = self._doc
-        return obj
-
-    @classmethod
-    def build(cls, **kwargs):
-        """ build a new instance from this document object. """
-        properties = {}
-        for attr_name, attr in kwargs.items():
-            if isinstance(attr, (p.Property,)):
-                properties[attr_name] = attr
-                attr.__property_config__(cls, attr_name)
-            elif type(attr) in MAP_TYPES_PROPERTIES and \
-                    not attr_name.startswith('_') and \
-                    attr_name not in _NODOC_WORDS:
-                check_reserved_words(attr_name)
-
-                prop = MAP_TYPES_PROPERTIES[type(attr)](default=attr)
-                properties[attr_name] = prop
-                prop.__property_config__(cls, attr_name)
-                properties[attr_name] = prop
-        return type('AnonymousSchema', (cls,), properties)
 
 class DocumentBase(DocumentSchema):
-    """ Base Document object that map a CouchDB Document.
-    It allow you to statically map a document by
-    providing fields like you do with any ORM or
-    dynamically. Ie unknown fields are loaded as
-    object property that you can edit, datetime in
-    iso3339 format are automatically translated in
-    python types (date, time & datetime) and decimal too.
 
-    Example of documentass
+    _id = jsonobject.StringProperty(exclude_if_none=True)
+    _rev = jsonobject.StringProperty(exclude_if_none=True)
+    _attachments = jsonobject.DictProperty(exclude_if_none=True, default=None)
 
-    .. code-block:: python
-
-        from couchdbkit.schema import *
-        class MyDocument(Document):
-            mystring = StringProperty()
-            myotherstring = unicode() # just use python types
-
-
-    Document fields can be accessed as property or
-    key of dict. These are similar : ``value = instance.key or value = instance['key'].``
-
-    To delete a property simply do ``del instance[key'] or delattr(instance, key)``
-    """
     _db = None
 
-    def __init__(self, _d=None, **kwargs):
-        _d = _d or {}
-
-        docid = kwargs.pop('_id', _d.pop("_id", ""))
-        docrev = kwargs.pop('_rev', _d.pop("_rev", ""))
-
-        super(DocumentBase, self).__init__(_d, **kwargs)
-
-        if docid: self._doc['_id'] = valid_id(docid)
-        if docrev: self._doc['_rev'] = docrev
+    # The rest of this class is mostly copied from couchdbkit 0.5.7
 
     @classmethod
     def set_db(cls, db):
@@ -440,24 +140,34 @@ class DocumentBase(DocumentSchema):
     store = save
 
     @classmethod
-    def save_docs(cls, docs, use_uuids=True, all_or_nothing=False):
+    def save_docs(cls, docs, use_uuids=True):
         """ Save multiple documents in database.
 
         @params docs: list of couchdbkit.schema.Document instance
         @param use_uuids: add _id in doc who don't have it already set.
-        @param all_or_nothing: In the case of a power failure, when the database
-        restarts either all the changes will have been saved or none of them.
-        However, it does not do conflict checking, so the documents will
-        be committed even if this creates conflicts.
-
         """
         db = cls.get_db()
-        docs_to_save= [doc for doc in docs if doc._doc_type == cls._doc_type]
-        if not len(docs_to_save) == len(docs):
+        if any(doc._doc_type != cls._doc_type for doc in docs):
             raise ValueError("one of your documents does not have the correct type")
-        db.bulk_save(docs_to_save, use_uuids=use_uuids, all_or_nothing=all_or_nothing)
+        db.bulk_save(docs, use_uuids=use_uuids)
 
     bulk_save = save_docs
+
+    @classmethod
+    def delete_docs(cls, docs, empty_on_delete=False):
+        """ Bulk delete documents in a database
+
+        @params docs: list of couchdbkit.schema.Document instance
+        @param empty_on_delete: default is False if you want to make
+        sure the doc is emptied and will not be stored as is in Apache
+        CouchDB.
+        """
+        db = cls.get_db()
+        if any(doc._doc_type != cls._doc_type for doc in docs):
+            raise ValueError("one of your documents does not have the correct type")
+        db.bulk_delete(docs, empty_on_delete=empty_on_delete)
+
+    bulk_delete = delete_docs
 
     @classmethod
     def get(cls, docid, rev=None, db=None, dynamic_properties=True):
@@ -591,35 +301,15 @@ class QueryMixin(object):
             dynamic_properties=dynamic_properties, wrap_doc=wrap_doc,
             wrapper=wrapper, schema=classes, **params)
 
-    @classmethod
-    def temp_view(cls, design, wrapper=None, dynamic_properties=None,
-    wrap_doc=True, classes=None, **params):
-        """ Slow view. Like in view method,
-        results are automatically wrapped to
-        Document object.
-
-        @params design: design object, See `simplecouchd.client.Database`
-        @dynamic_properties: do we handle properties which aren't in
-            the schema ?
-        @wrap_doc: If True, if a doc is present in the row it will be
-            used for wrapping. Default is True.
-        @params params:  params of view
-
-        @return: Like view, return a :class:`simplecouchdb.core.ViewResults`
-        instance. All results are wrapped to current document instance.
-        """
-        db = cls.get_db()
-        return db.temp_view(design,
-            dynamic_properties=dynamic_properties, wrap_doc=wrap_doc,
-            wrapper=wrapper, schema=classes or cls, **params)
 
 class Document(DocumentBase, QueryMixin, AttachmentMixin):
     """
     Full featured document object implementing the following :
 
-    :class:`QueryMixin` for view & temp_view that wrap results to this object
+    :class:`QueryMixin` for view that wrap results to this object
     :class `AttachmentMixin` for attachments function
     """
+
 
 class StaticDocument(Document):
     """

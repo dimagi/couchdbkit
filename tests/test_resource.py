@@ -3,12 +3,10 @@
 # This file is part of couchdbkit released under the MIT license. 
 # See the NOTICE for more information.
 #
+from __future__ import absolute_import
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from restkit.errors import RequestFailed, RequestError
 from couchdbkit.resource import CouchdbResource
@@ -31,7 +29,7 @@ class ServerTestCase(unittest.TestCase):
 
     def testGetInfo(self):
         info = self.couchdb.get().json_body
-        self.assert_(info.has_key('version'))
+        self.assert_('version' in info)
         
     def testCreateDb(self):
         res = self.couchdb.put('/couchdkbit_test').json_body

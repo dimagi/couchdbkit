@@ -3,14 +3,13 @@
 # This file is part of couchdbkit released under the MIT license.
 # See the NOTICE for more information.
 #
+from __future__ import absolute_import
+from six.moves import range
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import threading
 import time
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from couchdbkit import *
 
@@ -31,19 +30,18 @@ class ClientServerTestCase(unittest.TestCase):
         except:
             pass
 
-
     def test_fetch(self):
         res1 = self.consumer.fetch()
-        self.assert_("last_seq" in res1)
-        self.assert_(res1["last_seq"] == 0)
-        self.assert_(res1["results"] == [])
+        self.assertTrue("last_seq" in res1)
+        self.assertTrue(res1["last_seq"].startswith("0"))
+        self.assertEqual(res1["results"], [])
         doc = {}
         self.db.save_doc(doc)
         res2 = self.consumer.fetch()
-        self.assert_(res2["last_seq"] == 1)
-        self.assert_(len(res2["results"]) == 1)
+        self.assertTrue(res2["last_seq"].startswith("1"))
+        self.assertEqual(len(res2["results"]), 1)
         line = res2["results"][0]
-        self.assert_(line["id"] == doc["_id"])
+        self.assertEqual(line["id"], doc["_id"])
 
     def test_longpoll(self):
 

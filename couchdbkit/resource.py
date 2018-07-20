@@ -19,17 +19,21 @@ Example:
     u'Welcome'
 
 """
+from __future__ import absolute_import
 import base64
 import re
+from datetime import datetime
 
 from restkit import Resource, ClientResponse
-from restkit.errors import ResourceError, RequestFailed, RequestError
-from restkit.util import url_quote
+from restkit.errors import ResourceError, RequestFailed
+from restkit.util import url_quote, make_uri
 
 from . import __version__
 from .exceptions import ResourceNotFound, ResourceConflict, \
 PreconditionFailed
 from .utils import json
+from .logging import request_logger
+import six
 
 USER_AGENT = 'couchdbkit/%s' % __version__
 
@@ -94,6 +98,11 @@ class CouchdbResource(Resource):
         @return: tuple (data, resp), where resp is an `httplib2.Response`
             object and data a python object (often a dict).
         """
+        # logging information
+        start_time = datetime.utcnow()
+        resp = None
+        error_status = None
+        has_error = False
 
         headers = headers or {}
         headers.setdefault('Accept', 'application/json')
@@ -101,7 +110,7 @@ class CouchdbResource(Resource):
 
         if payload is not None:
             #TODO: handle case we want to put in payload json file.
-            if not hasattr(payload, 'read') and not isinstance(payload, basestring):
+            if not hasattr(payload, 'read') and not isinstance(payload, six.string_types):
                 payload = json.dumps(payload).encode('utf-8')
                 headers.setdefault('Content-Type', 'application/json')
 
@@ -109,8 +118,7 @@ class CouchdbResource(Resource):
         try:
             resp = Resource.request(self, method, path=path,
                              payload=payload, headers=headers, **params)
-
-        except ResourceError, e:
+        except ResourceError as e:
             msg = getattr(e, 'msg', '')
             if e.response and msg:
                 if e.response.headers.get('content-type') == 'application/json':
@@ -124,6 +132,8 @@ class CouchdbResource(Resource):
             else:
                 error = msg
 
+            has_error = True
+            error_status = e.status_int
             if e.status_int == 404:
                 raise ResourceNotFound(error, http_code=404,
                         response=e.response)
@@ -138,6 +148,23 @@ class CouchdbResource(Resource):
                 raise
         except:
             raise
+        finally:
+            database = _get_db_from_uri(self.uri, path)
+            end_time = datetime.utcnow()
+            duration = end_time - start_time
+            logging_context = dict(
+                method=method,
+                path=path,
+                params=params,
+                start_time=start_time,
+                end_time=end_time,
+                status_code=resp.status_int if resp else error_status,
+                content_length=resp.headers.get('content-length') if resp else None,
+                has_error=has_error,
+                duration=duration,
+                database=database
+            )
+            request_logger.debug('{} to {}/{} took {}'.format(method, database, path, duration), extra=logging_context)
 
         return resp
 
@@ -150,7 +177,7 @@ def encode_params(params):
                 value = json.dumps(value)
             elif value is None:
                 continue
-            elif not isinstance(value, basestring):
+            elif not isinstance(value, six.string_types):
                 value = json.dumps(value)
             _params[name] = value
     return _params
@@ -166,9 +193,17 @@ def escape_docid(docid):
 
 re_sp = re.compile('\s')
 def encode_attachments(attachments):
-    for k, v in attachments.iteritems():
+    for k, v in six.iteritems(attachments):
         if v.get('stub', False):
             continue
         else:
             v['data'] = re_sp.sub('', base64.b64encode(v['data']))
     return attachments
+
+
+def _get_db_from_uri(uri, path):
+    full_uri = make_uri(uri, path)
+    try:
+        return full_uri.split('/')[3]
+    except IndexError:
+        return 'unknown'

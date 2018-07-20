@@ -88,12 +88,13 @@ exemple :
 To create databases and sync views, just run the usual `syncdb` command.
 It won't destroy your datas, just synchronize views.
 """
-
+from __future__ import absolute_import
 from django.db.models import signals
 
-def syncdb(app, created_models, verbosity=2, **kwargs):
+
+def syncdb(app_config, verbosity=2, **kwargs):
     """ function used by syncdb signal """
     from couchdbkit.ext.django.loading import couchdbkit_handler
-    couchdbkit_handler.sync(app, verbosity=verbosity)
+    couchdbkit_handler.sync(app_config, verbosity=verbosity)
 
-signals.post_syncdb.connect(syncdb)
+signals.post_migrate.connect(syncdb)

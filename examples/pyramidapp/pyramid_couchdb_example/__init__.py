@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from pyramid.config import Configurator
 from pyramid.events import subscriber, ApplicationCreated
 from couchdbkit import *

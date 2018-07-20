@@ -17,11 +17,17 @@
 """ Wrapper of couchdbkit Document and Properties for django. It also
 add possibility to a document to register itself in CouchdbkitHandler
 """
+from __future__ import absolute_import
 import re
 import sys
+import six
+
+try:
+    from django.db.models.options import get_verbose_name
+except ImportError:
+    from django.utils.text import camel_case_to_spaces as get_verbose_name
 
 from django.conf import settings
-from django.db.models.options import get_verbose_name
 from django.utils.translation import activate, deactivate_all, get_language, \
 string_concat
 from django.utils.encoding import smart_str, force_unicode
@@ -34,7 +40,7 @@ __all__ = ['Property', 'StringProperty', 'IntegerProperty',
             'DecimalProperty', 'BooleanProperty', 'FloatProperty',
             'DateTimeProperty', 'DateProperty', 'TimeProperty',
             'dict_to_json', 'list_to_json', 'value_to_json',
-            'value_to_python', 'dict_to_python', 'list_to_python',
+            'dict_to_python', 'list_to_python',
             'convert_property', 'DocumentSchema', 'Document',
             'SchemaProperty', 'SchemaListProperty', 'ListProperty',
             'DictProperty', 'StringDictProperty', 'StringListProperty',
@@ -42,7 +48,9 @@ __all__ = ['Property', 'StringProperty', 'IntegerProperty',
 
 
 DEFAULT_NAMES = ('verbose_name', 'db_table', 'ordering',
-                 'app_label')
+                 'app_label', 'string_conversions', 'properties',
+                 'update_properties')
+DISCARD_NAMES = ('abstract',)
 
 class Options(object):
     """ class based on django.db.models.options. We only keep
@@ -70,7 +78,7 @@ class Options(object):
                 # Ignore any private attributes that Django doesn't care about.
                 # NOTE: We can't modify a dictionary's contents while looping
                 # over it, so we loop over the *original* dictionary instead.
-                if name.startswith('_'):
+                if name.startswith('_') or name in DISCARD_NAMES:
                     del meta_attrs[name]
             for attr_name in DEFAULT_NAMES:
                 if attr_name in meta_attrs:
@@ -84,7 +92,7 @@ class Options(object):
 
             # Any leftover attributes must be invalid.
             if meta_attrs != {}:
-                raise TypeError("'class Meta' got invalid attribute(s): %s" % ','.join(meta_attrs.keys()))
+                raise TypeError("'class Meta' got invalid attribute(s): %s" % ','.join(list(meta_attrs.keys())))
         else:
             self.verbose_name_plural = string_concat(self.verbose_name, 's')
         del self.meta
@@ -117,6 +125,8 @@ class DocumentMeta(schema.SchemaProperties):
         if not attr_meta:
             meta = getattr(new_class, 'Meta', None)
         else:
+            if getattr(attr_meta, 'abstract', False):
+                return new_class
             meta = attr_meta
 
         if getattr(meta, 'app_label', None) is None:
@@ -137,9 +147,8 @@ class DocumentMeta(schema.SchemaProperties):
         else:
             setattr(cls, name, value)
 
-class Document(schema.Document):
+class Document(six.with_metaclass(DocumentMeta, schema.Document)):
     """ Document object for django extension """
-    __metaclass__ = DocumentMeta
 
     get_id = property(lambda self: self['_id'])
     get_rev = property(lambda self: self['_rev'])
@@ -180,7 +189,6 @@ SetProperty = schema.SetProperty
 dict_to_json = schema.dict_to_json
 list_to_json = schema.list_to_json
 value_to_json = schema.value_to_json
-value_to_python = schema.value_to_python
 dict_to_python = schema.dict_to_python
 list_to_python = schema.list_to_python
 convert_property = schema.convert_property

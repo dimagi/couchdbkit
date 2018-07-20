@@ -3,16 +3,14 @@
 # This file is part of couchdbkit released under the MIT license. 
 # See the NOTICE for more information.
 #
+from __future__ import absolute_import
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import base64
 import os
 import shutil
 import tempfile
-try:
-    import unittest2 as unittest
-except ImportError:
-    import unittest
+import unittest
 
 from restkit import ResourceNotFound, RequestFailed
 

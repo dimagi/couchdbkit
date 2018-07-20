@@ -1,3 +1,10 @@
+About the jsonobject fork of couchdbkit
+---------------------------------------
+`jsonobject-couchdbkit`_ is a fork of couchdbkit that replaces couchdbkit.schema
+with a thin wrapper around jsonobject
+(which was, incidentally, written as a **way** faster replacement
+for couchdbkit.schema.) See `jsonobject`_.
+
 About
 -----
 
@@ -155,6 +162,8 @@ greets::
 
   greets = Greeting.view('greeting/all')
 
+.. _jsonobject-couchdbkit: https://github.com/dimagi/couchdbkit/tree/jsonobject
+.. _jsonobject: http://github.com/dimagi/jsonobject
 .. _Couchdbkit: http://couchdbkit.org
 .. _API: http://couchdbkit.org/doc/api/
 .. _couchapp:  http://github.com/couchapp/couchapp/tree/

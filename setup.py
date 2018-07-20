@@ -3,12 +3,13 @@
 # This file is part of couchdbkit released under the MIT license.
 # See the NOTICE for more information.
 
+from __future__ import absolute_import
 from imp import load_source
 import os
 import sys
 
-if not hasattr(sys, 'version_info') or sys.version_info < (2, 6, 0, 'final'):
-    raise SystemExit("couchdbkit requires Python 2.6 or later.")
+if not hasattr(sys, 'version_info') or sys.version_info < (2, 7, 0, 'final'):
+    raise SystemExit("couchdbkit requires Python 2.7 or later.")
 
 from setuptools import setup, find_packages
 
@@ -18,15 +19,15 @@ version = load_source("version", os.path.join("couchdbkit",
 
 
 setup(
-    name = 'couchdbkit',
+    name = 'jsonobject-couchdbkit',
     version = version.__version__,
 
     description = 'Python couchdb kit',
-    long_description = file(
+    long_description = open(
         os.path.join(
             os.path.dirname(__file__),
             'README.rst'
-        )
+        ), 'rt'
     ).read(),
     author = 'Benoit Chesneau',
     author_email = 'benoitc@e-engura.com',
@@ -40,8 +41,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.5',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Topic :: Database',
         'Topic :: Utilities',
@@ -51,8 +50,14 @@ setup(
 
     zip_safe = False,
 
-    install_requires = [ 'restkit>=4.2.2' ],
-
+    install_requires = [
+        'restkit>=4.2.2',
+        'jsonobject>=0.9.1',
+        'cloudant==2.7.0',
+        'six==1.11.0',
+    ],
+    provides=['couchdbkit'],
+    obsoletes=['couchdbkit'],
     entry_points="""
     [couchdbkit.consumers]
     sync=couchdbkit.consumer.sync:SyncConsumer

@@ -155,9 +155,7 @@ reference across threads, changing a db to a class will be applied to
 all threads. It's better to use the db object methods if you want to be
 threadsafe.
 """
-
 from .properties import (
-        ALLOWED_PROPERTY_TYPES,
         Property,
         StringProperty,
         IntegerProperty,
@@ -175,12 +173,9 @@ from .properties import (
         dict_to_json,
         list_to_json,
         value_to_json,
-        MAP_TYPES_PROPERTIES,
-        value_to_python,
         dict_to_python,
         list_to_python,
         convert_property,
-        value_to_property,
         LazyDict,
         LazyList)
 
@@ -191,7 +186,6 @@ except ImportError:
 
 from .base import (
         ReservedWordError,
-        ALLOWED_PROPERTY_TYPES,
         DocumentSchema,
         SchemaProperties,
         DocumentBase,
