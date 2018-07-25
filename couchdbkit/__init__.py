@@ -9,7 +9,7 @@ from .resource import  RequestFailed, CouchdbResource
 from .exceptions import InvalidAttachment, DuplicatePropertyError,\
 BadValueError, MultipleResultsFound, NoResultFound, ReservedWordError,\
 DocsPathNotFound, BulkSaveError, ResourceNotFound, ResourceConflict, \
-PreconditionFailed
+PreconditionFailed, NoLongerSupportedException
 
 from .client import Server, Database, ViewResults
 from .changes import ChangesStream
