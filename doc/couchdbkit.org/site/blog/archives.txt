@@ -1,5 +1,0 @@
-title: Couchdbkit news
-content_type: textile
-page_type: blog
-template: blog/archives.html
-

@@ -1,2 +1,0 @@
-include *.txt *.ini *.cfg *.rst
-recursive-include pyramid_couchdb_example *.ico *.png *.css *.gif *.jpg *.pt *.txt *.mak *.mako *.js *.html *.xml
