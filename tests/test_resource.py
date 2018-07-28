@@ -8,7 +8,7 @@ __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import unittest
 
-from restkit.errors import RequestFailed, RequestError
+from restkit.errors import RequestError
 from couchdbkit.resource import CouchdbResource
 
 
