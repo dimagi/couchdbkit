@@ -23,10 +23,8 @@ from __future__ import absolute_import
 import base64
 import re
 
-from restkit.util import url_quote
-
 from . import __version__
-from .utils import json
+from .utils import json, url_quote
 import six
 
 USER_AGENT = 'couchdbkit/%s' % __version__

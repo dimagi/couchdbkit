@@ -44,7 +44,6 @@ from cloudant.document import Document
 from cloudant.error import CloudantClientException
 from cloudant.security_document import SecurityDocument
 from requests.exceptions import HTTPError
-from restkit.util import url_quote
 import six
 from six.moves import filter
 from six.moves.urllib.parse import urljoin, unquote
@@ -53,7 +52,7 @@ from couchdbkit.logging import error_logger
 from .exceptions import InvalidAttachment, NoResultFound, \
         ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound, NoLongerSupportedException
 from . import resource
-from .utils import validate_dbname
+from .utils import validate_dbname, url_quote
 
 from .schema.util import maybe_schema_wrapper
 
