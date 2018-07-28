@@ -7,7 +7,6 @@
 All exceptions used in couchdbkit.
 """
 from __future__ import absolute_import
-from restkit.errors import ResourceError
 import jsonobject.exceptions
 
 class InvalidAttachment(Exception):
@@ -50,13 +49,13 @@ class MacroError(Exception):
 class DesignerError(Exception):
     """ unkown exception raised by the designer """
 
-class ResourceNotFound(ResourceError):
+class ResourceNotFound(Exception):
     """ Exception raised when resource is not found"""
 
-class ResourceConflict(ResourceError):
+class ResourceConflict(Exception):
     """ Exception raised when there is conflict while updating"""
 
-class PreconditionFailed(ResourceError):
+class PreconditionFailed(Exception):
     """ Exception raised when 412 HTTP error is received in response
     to a request """
 

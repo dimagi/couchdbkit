@@ -22,34 +22,14 @@ Example:
 from __future__ import absolute_import
 import base64
 import re
-from datetime import datetime
 
-from restkit import Resource, ClientResponse
-from restkit.errors import ResourceError, RequestFailed
 from restkit.util import url_quote, make_uri
 
 from . import __version__
-from .exceptions import ResourceNotFound, ResourceConflict, \
-PreconditionFailed
 from .utils import json
-from .logging import request_logger
 import six
 
 USER_AGENT = 'couchdbkit/%s' % __version__
-
-RequestFailed = RequestFailed
-
-class CouchDBResponse(ClientResponse):
-
-    @property
-    def json_body(self):
-        body = self.body_string()
-
-        # try to decode json
-        try:
-            return json.loads(body)
-        except ValueError:
-            return body
 
 
 def encode_params(params):
