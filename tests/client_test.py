@@ -7,7 +7,6 @@ from __future__ import absolute_import
 import six
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
-import copy
 import unittest
 
 from couchdbkit import ResourceNotFound, RequestFailed, \
@@ -18,7 +17,6 @@ from couchdbkit import *
 
 class ClientServerTestCase(unittest.TestCase):
     def setUp(self):
-        self.couchdb = CouchdbResource()
         self.Server = Server()
 
     def tearDown(self):
@@ -86,7 +84,6 @@ class ClientServerTestCase(unittest.TestCase):
 
 class ClientDatabaseTestCase(unittest.TestCase):
     def setUp(self):
-        self.couchdb = CouchdbResource()
         self.Server = Server()
 
     def tearDown(self):
@@ -538,7 +535,6 @@ class ClientDatabaseTestCase(unittest.TestCase):
 
 class ClientViewTestCase(unittest.TestCase):
     def setUp(self):
-        self.couchdb = CouchdbResource()
         self.Server = Server()
 
     def tearDown(self):
