@@ -23,7 +23,7 @@ from __future__ import absolute_import
 import base64
 import re
 
-from restkit.util import url_quote, make_uri
+from restkit.util import url_quote
 
 from . import __version__
 from .utils import json
@@ -63,11 +63,3 @@ def encode_attachments(attachments):
         else:
             v['data'] = re_sp.sub('', base64.b64encode(v['data']))
     return attachments
-
-
-def _get_db_from_uri(uri, path):
-    full_uri = make_uri(uri, path)
-    try:
-        return full_uri.split('/')[3]
-    except IndexError:
-        return 'unknown'
