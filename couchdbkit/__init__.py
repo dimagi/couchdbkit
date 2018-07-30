@@ -16,7 +16,6 @@ from .changes import ChangesStream
 from .consumer import Consumer
 from .designer import document, push, pushdocs, pushapps, clone
 from .external import External
-from .loaders import BaseDocsLoader, FileSystemDocsLoader
 
 from .schema import (
     Property, IntegerProperty, DecimalProperty, BooleanProperty, FloatProperty, StringProperty,
