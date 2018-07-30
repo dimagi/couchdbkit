@@ -22,6 +22,8 @@ import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 import six
 from six.moves import range
 
+import six
+
 
 try:
     import ujson as json
@@ -131,15 +133,16 @@ def validate_dbname(name):
         raise ValueError("Invalid db name: '%s'" % name)
     return True
 
+
 def to_bytestring(s):
     """ convert to bytestring an unicode """
     if not isinstance(s, six.string_types):
         return s
     if isinstance(s, six.text_type):
         return s.encode('utf-8')
-    else:
-        return s
-    
+    return s
+
+
 def read_file(fname, utf8=True, force_read=False):
     """ read file content"""
     if utf8:

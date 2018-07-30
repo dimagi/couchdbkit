@@ -7,11 +7,11 @@ from __future__ import absolute_import
 import six
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
-import copy
 import unittest
 
-from couchdbkit import ResourceNotFound, RequestFailed, \
-ResourceConflict
+from requests import HTTPError
+
+from couchdbkit import ResourceNotFound, ResourceConflict
 
 from couchdbkit import *
 
@@ -111,14 +111,12 @@ class ClientDatabaseTestCase(unittest.TestCase):
         info = db1.info()
         self.assert_(info['db_name'] == "couchdbkit_test")
 
-
     def testCreateEmptyDoc(self):
         db = self.Server.create_db('couchdbkit_test')
         doc = {}
         db.save_doc(doc)
         del self.Server['couchdbkit_test']
         self.assert_('_id' in doc)
-
 
     def testCreateDoc(self):
         db = self.Server.create_db('couchdbkit_test')
@@ -415,7 +413,7 @@ class ClientDatabaseTestCase(unittest.TestCase):
         old_rev = doc['_rev']
         db.put_attachment(doc, text_attachment, "test", "text/plain")
         db.delete_attachment(doc, 'test')
-        self.assertRaises(ResourceNotFound, db.fetch_attachment, doc, 'test')
+        self.assertRaises(HTTPError, db.fetch_attachment, doc, 'test')
         del self.Server['couchdbkit_test']
 
     def testAttachmentsWithSlashes(self):
