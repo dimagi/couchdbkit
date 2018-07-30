@@ -64,3 +64,9 @@ class DocTypeError(Exception):
     """ Exception raised when doc type of json to be wrapped
     does not match the doc type of the matching class
     """
+
+
+class NoLongerSupportedException(Exception):
+    """
+    Function is no longer supported in couchdbkit.
+    """

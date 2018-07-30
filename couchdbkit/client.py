@@ -50,7 +50,7 @@ from six.moves.urllib.parse import urljoin, unquote
 
 from couchdbkit.logging import error_logger
 from .exceptions import InvalidAttachment, NoResultFound, \
-        ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound
+        ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound, NoLongerSupportedException
 from . import resource
 from .utils import validate_dbname
 
@@ -843,114 +843,13 @@ class Database(object):
 
     def put_attachment(self, doc, content, name=None, content_type=None,
             content_length=None, headers=None):
-        """ Add attachement to a document. All attachments are streamed.
-
-        @param doc: dict, document object
-        @param content: string or :obj:`File` object.
-        @param name: name or attachment (file name).
-        @param content_type: string, mimetype of attachment.
-        If you don't set it, it will be autodetected.
-        @param content_lenght: int, size of attachment.
-
-        @return: bool, True if everything was ok.
-
-
-        Example:
-
-            >>> from simplecouchdb import server
-            >>> server = server()
-            >>> db = server.create_db('couchdbkit_test')
-            >>> doc = { 'string': 'test', 'number': 4 }
-            >>> db.save(doc)
-            >>> text_attachment = u'un texte attaché'
-            >>> db.put_attachment(doc, text_attachment, "test", "text/plain")
-            True
-            >>> file = db.fetch_attachment(doc, 'test')
-            >>> result = db.delete_attachment(doc, 'test')
-            >>> result['ok']
-            True
-            >>> db.fetch_attachment(doc, 'test')
-            >>> del server['couchdbkit_test']
-            {u'ok': True}
-        """
-
-        if not headers:
-            headers = {}
-
-        if not content:
-            content = ""
-            content_length = 0
-
-        if name is None:
-            if hasattr(content, "name"):
-                name = content.name
-            else:
-                raise InvalidAttachment('You should provide a valid attachment name')
-
-        name = url_quote(name, safe="")
-        if content_type is None:
-            content_type = ';'.join(filter(None, guess_type(name)))
-
-        if content_type:
-            headers['Content-Type'] = content_type
-
-        # add appropriate headers
-        if content_length:
-            headers['Content-Length'] = content_length
-
-        doc1, schema = _maybe_serialize(doc)
-
-        docid = resource.escape_docid(doc1['_id'])
-        res = self.res(docid).put(name, payload=content,
-                headers=headers, rev=doc1['_rev']).json_body
-
-        if res['ok']:
-            new_doc = self.get(doc1['_id'], rev=res['rev'])
-            doc.update(new_doc)
-        return res['ok']
+        raise NoLongerSupportedException
 
     def delete_attachment(self, doc, name, headers=None):
-        """ delete attachement to the document
-
-        @param doc: dict, document object in python
-        @param name: name of attachement
-
-        @return: dict, with member ok set to True if delete was ok.
-        """
-        doc1, schema = _maybe_serialize(doc)
-
-        docid = resource.escape_docid(doc1['_id'])
-        name = url_quote(name, safe="")
-
-        res = self.res(docid).delete(name, rev=doc1['_rev'],
-                headers=headers).json_body
-        if res['ok']:
-            new_doc = self.get(doc1['_id'], rev=res['rev'])
-            doc.update(new_doc)
-        return res['ok']
+        raise NoLongerSupportedException
 
     def fetch_attachment(self, id_or_doc, name, stream=False, headers=None):
-        """ get attachment in a document
-
-        @param id_or_doc: str or dict, doc id or document dict
-        @param name: name of attachment default: default result
-        @param stream: boolean, if True return a file object
-        @return: `restkit.httpc.Response` object
-        """
-
-        if isinstance(id_or_doc, six.string_types):
-            docid = id_or_doc
-        else:
-            doc, schema = _maybe_serialize(id_or_doc)
-            docid = doc['_id']
-
-        docid = resource.escape_docid(docid)
-        name = url_quote(name, safe="")
-
-        resp = self.res(docid).get(name, headers=headers)
-        if stream:
-            return resp.body_stream()
-        return resp.body_string(charset="utf-8")
+        raise NoLongerSupportedException
 
 
     def ensure_full_commit(self):
