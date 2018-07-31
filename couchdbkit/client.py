@@ -733,7 +733,12 @@ class Database(object):
             couch_doc.document_url,
             params={"rev": couch_doc["_rev"]},
         )
-        res.raise_for_status()
+        try:
+            res.raise_for_status()
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                raise ResourceNotFound
+            raise
         result = res.json()
 
         if schema:
@@ -782,7 +787,12 @@ class Database(object):
         if destination:
             headers.update({"Destination": str(destination)})
             resp = self._request_session.request('copy', self._database_path(docid), headers=headers)
-            resp.raise_for_status()
+            try:
+                resp.raise_for_status()
+            except HTTPError as e:
+                if e.response.status_code == 404:
+                    raise ResourceNotFound
+                raise
             return resp.json()
 
         return {'ok': False}
