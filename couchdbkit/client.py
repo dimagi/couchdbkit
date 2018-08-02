@@ -870,7 +870,7 @@ class ViewResults(object):
 
         """
         assert not (wrapper and schema)
-        wrap_doc = params.pop('wrap_doc', schema is not None)
+        wrap_doc = params.get('wrap_doc', schema is not None)
         if schema:
             schema_wrapper = maybe_schema_wrapper(schema, params)
             def row_wrapper(row):
