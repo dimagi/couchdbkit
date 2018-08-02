@@ -753,6 +753,7 @@ class Database(object):
         return {'ok': False}
 
     def raw_view(self, view_path, params):
+        params = deepcopy(params)
         params.pop('dynamic_properties', None)
         if view_path == '_all_docs':
             return self.cloudant_database.all_docs(**params)
