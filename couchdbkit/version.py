@@ -4,5 +4,5 @@
 # See the NOTICE for more information.
 
 from __future__ import absolute_import
-version_info = (0, 9, 6)
+version_info = (0, 9, 7)
 __version__ = ".".join([str(vi) for vi in version_info])
