@@ -17,40 +17,17 @@ class SyncConsumer(ConsumerBase):
             check_callable(cb)
 
         params.update({"feed": "longpoll"})
-        resp = self.db.res.get("_changes", **params)
-        buf = ""
-        with resp.body_stream() as body:
-            while True:
-                data = body.read()
-                if not data:
-                    break
-                buf += data
-
-            ret = json.loads(buf)
+        changes = self.db.cloudant_database.changes(**params)
+        for change in changes:
             if cb is not None:
-                cb(ret)
+                cb(change)
                 return
-
-            return ret
+            return change
 
     def wait(self, cb, **params):
         check_callable(cb)
         params.update({"feed": "continuous"})
-        resp = self.db.res.get("_changes", **params)
+        changes = self.db.cloudant_database.changes(**params)
 
-        with resp.body_stream() as body:
-            while True:
-                try:
-                    line = body.readline()
-                    if not line:
-                        break
-                    if line.endswith("\r\n"):
-                        line = line[:-2]
-                    else:
-                        line = line[:-1]
-                    if not line:
-                        continue
-
-                    cb(json.loads(line))
-                except (KeyboardInterrupt, SystemExit,):
-                    break
+        for change in changes:
+            cb(change)
