@@ -5,7 +5,6 @@
 
 from .version import version_info, __version__
 
-from .resource import  RequestFailed, CouchdbResource
 from .exceptions import InvalidAttachment, DuplicatePropertyError,\
 BadValueError, MultipleResultsFound, NoResultFound, ReservedWordError,\
 DocsPathNotFound, BulkSaveError, ResourceNotFound, ResourceConflict, \

@@ -14,6 +14,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 import codecs
 import string
+import urllib
 from hashlib import md5
 import os
 import re
@@ -233,3 +234,13 @@ class ProxyDict(jsonobject.utils.SimpleDict):
 
     def __copy__(self):
         return self.copy()
+
+
+# From https://benoitc.github.io/restkit/api/restkit.util-pysrc.html#url_quote
+def url_quote(s, safe='/:'):
+    """URL encode a single string with a given encoding."""
+    if isinstance(s, six.text_type):
+        s = s.encode('utf-8')
+    elif not isinstance(s, six.binary_type):
+        s = six.binary_type(s)
+    return urllib.quote(s, safe=safe)

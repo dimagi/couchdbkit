@@ -25,16 +25,15 @@ import sys
 import os
 from collections import OrderedDict
 
-from restkit import BasicAuth
 from couchdbkit import Server
 from couchdbkit import push
-from couchdbkit.resource import CouchdbResource
 from couchdbkit.exceptions import ResourceNotFound
 from django.conf import settings
 import six
 
 COUCHDB_DATABASES = getattr(settings, "COUCHDB_DATABASES", [])
 COUCHDB_TIMEOUT = getattr(settings, "COUCHDB_TIMEOUT", 300)
+
 
 class CouchdbkitHandler(object):
     """ The couchdbkit handler for django """
@@ -61,11 +60,6 @@ class CouchdbkitHandler(object):
         for app_name, app_setting in six.iteritems(databases):
             uri = app_setting['URL']
 
-            # Do not send credentials when they are both None as admin party will give a 401
-            user = app_setting.get('USER')
-            password = app_setting.get('PASSWORD')
-            filters = [BasicAuth(user, password)] if (user or password) is not None else []
-
             try:
                 if isinstance(uri, (list, tuple)):
                     # case when you want to specify server uri
@@ -78,9 +72,7 @@ class CouchdbkitHandler(object):
                 raise ValueError("couchdb uri [%s:%s] invalid" % (
                     app_name, uri))
 
-            res = CouchdbResource(server_uri, timeout=COUCHDB_TIMEOUT, filters=filters)
-
-            server = Server(server_uri, resource_instance=res)
+            server = Server(server_uri)
             app_label = app_name.split('.')[-1]
             self._databases[app_label] = (server, dbname)
 

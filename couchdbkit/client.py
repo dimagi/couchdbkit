@@ -44,7 +44,6 @@ from cloudant.document import Document
 from cloudant.error import CloudantClientException
 from cloudant.security_document import SecurityDocument
 from requests.exceptions import HTTPError
-from restkit.util import url_quote
 import six
 from six.moves import filter
 from six.moves.urllib.parse import urljoin, unquote
@@ -53,7 +52,7 @@ from couchdbkit.logging import error_logger
 from .exceptions import InvalidAttachment, NoResultFound, \
         ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound, NoLongerSupportedException
 from . import resource
-from .utils import validate_dbname
+from .utils import validate_dbname, url_quote
 
 from .schema.util import maybe_schema_wrapper
 
@@ -82,19 +81,12 @@ class Server(object):
     A Server object can be used like any `dict` object.
     """
 
-    resource_class = resource.CouchdbResource
-
-    def __init__(self, uri='http://127.0.0.1:5984',
-            uuid_batch_count=DEFAULT_UUID_BATCH_COUNT,
-            resource_class=None, resource_instance=None,
-            **client_opts):
+    def __init__(self, uri='http://127.0.0.1:5984', uuid_batch_count=DEFAULT_UUID_BATCH_COUNT):
 
         """ constructor for Server object
 
         @param uri: uri of CouchDb host
         @param uuid_batch_count: max of uuids to get in one time
-        @param resource_instance: `restkit.resource.CouchdbDBResource` instance.
-            It alows you to set a resource class with custom parameters.
         """
 
         if not uri or uri is None:
@@ -107,17 +99,6 @@ class Server(object):
         self.uuid_batch_count = uuid_batch_count
         self._uuid_batch_count = uuid_batch_count
 
-        if resource_class is not None:
-            self.resource_class = resource_class
-
-        if resource_instance and isinstance(resource_instance,
-                                resource.CouchdbResource):
-            resource_instance.initial['uri'] = uri
-            self.res = resource_instance.clone()
-            if client_opts:
-                self.res.client_opts.update(client_opts)
-        else:
-            self.res = self.resource_class(uri, **client_opts)
         self._uuids = deque()
         # admin_party is true, because the username/pass is passed in uri for now
         self.cloudant_client = CouchDB('', '', url=uri, admin_party=True, connect=True)
@@ -292,7 +273,6 @@ class Database(object):
         if create:
             self.cloudant_database.create()
 
-        self.res = server.res(self.dbname)
         self._request_session = self.server._request_session
         self.database_url = self.cloudant_database.database_url
 
