@@ -30,7 +30,7 @@ except ImportError:
 from django.conf import settings
 from django.utils.translation import activate, deactivate_all, get_language, \
 string_concat
-from django.utils.encoding import smart_str, force_unicode
+from django.utils.encoding import smart_str, force_text
 
 from couchdbkit import schema
 from couchdbkit.ext.django.loading import get_schema, register_schema, \
@@ -108,7 +108,7 @@ class Options(object):
         """
         lang = get_language()
         deactivate_all()
-        raw = force_unicode(self.verbose_name)
+        raw = force_text(self.verbose_name)
         activate(lang)
         return raw
     verbose_name_raw = property(verbose_name_raw)
