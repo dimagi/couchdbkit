@@ -390,8 +390,10 @@ class Database(object):
             wrapper = schema.wrap
         attachments = params.get('attachments', False)
 
-        if isinstance(docid, six.text_type):
+        if six.PY2 and isinstance(docid, six.text_type):
             docid = docid.encode('utf-8')
+        if six.PY3 and isinstance(docid, bytes):
+            docid = docid.decode('utf-8')
         doc = Document(self.cloudant_database, docid)
         try:
             doc.fetch()
@@ -494,7 +496,7 @@ class Database(object):
             doc1['_attachments'] = resource.encode_attachments(doc['_attachments'])
 
         if '_id' in doc1:
-            docid = doc1['_id'].encode('utf-8')
+            docid = doc1['_id'] if six.PY3 else doc1['_id'].encode('utf-8')
             couch_doc = Document(self.cloudant_database, docid)
             couch_doc.update(doc1)
             try:
