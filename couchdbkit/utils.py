@@ -14,12 +14,10 @@ from __future__ import absolute_import
 from __future__ import print_function
 import codecs
 import string
-import urllib
 from hashlib import md5
 import os
 import re
 import sys
-import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 import six
 from six.moves import range
 
@@ -243,4 +241,4 @@ def url_quote(s, safe='/:'):
         s = s.encode('utf-8')
     elif not isinstance(s, six.binary_type):
         s = six.binary_type(s)
-    return urllib.quote(s, safe=safe)
+    return six.moves.urllib.parse.quote(s, safe=safe)
