@@ -86,6 +86,7 @@ def install_request_logger():
         return resp
 
     def uninstall():
+        # this is mainly for tests, so they can do proper cleanup
         ClientSession.request = real_request
 
     real_request = ClientSession.request
