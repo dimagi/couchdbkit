@@ -14,8 +14,7 @@ if not hasattr(sys, 'version_info') or sys.version_info < (2, 7, 0, 'final'):
 from setuptools import setup, find_packages
 
 # open version module
-version = load_source("version", os.path.join("couchdbkit",
-        "version.py"))
+version = load_source("version", os.path.join("couchdbkit", "version.py"))
 
 
 setup(
