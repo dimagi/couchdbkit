@@ -5,18 +5,16 @@
 
 from .version import version_info, __version__
 
-from .resource import  RequestFailed, CouchdbResource
 from .exceptions import InvalidAttachment, DuplicatePropertyError,\
 BadValueError, MultipleResultsFound, NoResultFound, ReservedWordError,\
 DocsPathNotFound, BulkSaveError, ResourceNotFound, ResourceConflict, \
-PreconditionFailed
+PreconditionFailed, NoLongerSupportedException
 
 from .client import Server, Database, ViewResults
 from .changes import ChangesStream
 from .consumer import Consumer
 from .designer import document, push, pushdocs, pushapps, clone
 from .external import External
-from .loaders import BaseDocsLoader, FileSystemDocsLoader
 
 from .schema import (
     Property, IntegerProperty, DecimalProperty, BooleanProperty, FloatProperty, StringProperty,

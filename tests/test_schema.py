@@ -545,12 +545,10 @@ class DocumentTestCase(unittest.TestCase):
         text_attachment = u"un texte attaché"
         old_rev = a._rev
 
-        a.put_attachment(text_attachment, "test", "text/plain")
-        self.assert_(old_rev != a._rev)
-        fetch_attachment = a.fetch_attachment("test")
-        self.assert_(text_attachment == fetch_attachment)
-        self.server.delete_db('couchdbkit_test')
-
+        with self.assertRaises(NoLongerSupportedException):
+            a.put_attachment(text_attachment, "test", "text/plain")
+        with self.assertRaises(NoLongerSupportedException):
+            fetch_attachment = a.fetch_attachment("test")
 
     def testDocumentDeleteAttachment(self):
         db = self.server.create_db('couchdbkit_test')
@@ -564,12 +562,11 @@ class DocumentTestCase(unittest.TestCase):
 
         text_attachment = "un texte attaché"
 
-        a.put_attachment(text_attachment, "test", "text/plain")
-        a.delete_attachment('test')
-        self.assertRaises(ResourceNotFound, a.fetch_attachment, 'test')
-        self.assertFalse('test' in a._doc['_attachments'])
-
-        self.server.delete_db('couchdbkit_test')
+        with self.assertRaises(NoLongerSupportedException):
+            a.put_attachment(text_attachment, "test", "text/plain")
+        with self.assertRaises(NoLongerSupportedException):
+            a.delete_attachment('test')
+        self.assertRaises(NoLongerSupportedException, a.fetch_attachment, 'test')
 
     def testGetOrCreate(self):
         self.server.create_db('couchdbkit_test')

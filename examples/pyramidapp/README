@@ -1,4 +1,0 @@
-Example implementation for http://docs.pylonsproject.org/projects/pyramid_cookbook/en/latest/database/couchdb.html
-
-$ python setup.py develop
-$ pserve --reload development.ini

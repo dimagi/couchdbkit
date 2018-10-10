@@ -7,10 +7,9 @@ from __future__ import absolute_import
 import six
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
-import copy
 import unittest
 
-from couchdbkit import ResourceNotFound, RequestFailed, \
+from couchdbkit import ResourceNotFound, \
 ResourceConflict
 
 from couchdbkit import *
@@ -18,7 +17,6 @@ from couchdbkit import *
 
 class ClientServerTestCase(unittest.TestCase):
     def setUp(self):
-        self.couchdb = CouchdbResource()
         self.Server = Server()
 
     def tearDown(self):
@@ -86,7 +84,6 @@ class ClientServerTestCase(unittest.TestCase):
 
 class ClientDatabaseTestCase(unittest.TestCase):
     def setUp(self):
-        self.couchdb = CouchdbResource()
         self.Server = Server()
 
     def tearDown(self):
@@ -236,17 +233,8 @@ class ClientDatabaseTestCase(unittest.TestCase):
             }
         }
         db.save_doc(design_doc)
-        db.put_attachment(design_doc, 'test', 'test', 'test/plain')
-        self.assert_(len(db) == 3)
-        db.flush()
-        self.assert_(len(db) == 1)
-        self.assertFalse(db.doc_exist('test'))
-        self.assertFalse(db.doc_exist('test2'))
-        self.assert_(db.doc_exist('_design/test'))
-        ddoc = db.get("_design/test")
-        self.assert_('all' in ddoc['views'])
-        self.assert_('test' in ddoc['_attachments'])
-        del self.Server['couchdbkit_test']
+        with self.assertRaises(NoLongerSupportedException):
+            db.put_attachment(design_doc, 'test', 'test', 'test/plain')
 
     def testDbLen(self):
         db = self.Server.create_db('couchdbkit_test')
@@ -297,15 +285,8 @@ class ClientDatabaseTestCase(unittest.TestCase):
             }
         }
         db.save_doc(doc)
-        fetch_attachment = db.fetch_attachment(doc, "test.html")
-        self.assert_(attachment == fetch_attachment)
-        doc1 = db.get("docwithattachment")
-        self.assert_('_attachments' in doc1)
-        self.assert_('test.html' in doc1['_attachments'])
-        self.assert_('stub' in doc1['_attachments']['test.html'])
-        self.assert_(doc1['_attachments']['test.html']['stub'] == True)
-        self.assert_(len(attachment) == doc1['_attachments']['test.html']['length'])
-        del self.Server['couchdbkit_test']
+        with self.assertRaises(NoLongerSupportedException):
+            db.fetch_attachment(doc, "test.html")
 
     def testMultipleInlineAttachments(self):
         db = self.Server.create_db('couchdbkit_test')
@@ -327,17 +308,10 @@ class ClientDatabaseTestCase(unittest.TestCase):
         }
 
         db.save_doc(doc)
-        fetch_attachment = db.fetch_attachment(doc, "test.html")
-        self.assert_(attachment == fetch_attachment)
-        fetch_attachment = db.fetch_attachment(doc, "test2.html")
-        self.assert_(attachment2 == fetch_attachment)
-
-        doc1 = db.get("docwithattachment")
-        self.assert_('test.html' in doc1['_attachments'])
-        self.assert_('test2.html' in doc1['_attachments'])
-        self.assert_(len(attachment) == doc1['_attachments']['test.html']['length'])
-        self.assert_(len(attachment2) == doc1['_attachments']['test2.html']['length'])
-        del self.Server['couchdbkit_test']
+        with self.assertRaises(NoLongerSupportedException):
+            db.fetch_attachment(doc, "test.html")
+        with self.assertRaises(NoLongerSupportedException):
+            db.fetch_attachment(doc, "test2.html")
 
     def testInlineAttachmentWithStub(self):
         db = self.Server.create_db('couchdbkit_test')
@@ -363,48 +337,35 @@ class ClientDatabaseTestCase(unittest.TestCase):
         })
         db.save_doc(doc1)
 
-        fetch_attachment = db.fetch_attachment(doc1, "test2.html")
-        self.assert_(attachment2 == fetch_attachment)
-
-        doc2 = db.get("docwithattachment")
-        self.assert_('test.html' in doc2['_attachments'])
-        self.assert_('test2.html' in doc2['_attachments'])
-        self.assert_(len(attachment) == doc2['_attachments']['test.html']['length'])
-        self.assert_(len(attachment2) == doc2['_attachments']['test2.html']['length'])
-        del self.Server['couchdbkit_test']
+        with self.assertRaises(NoLongerSupportedException):
+            db.fetch_attachment(doc1, "test2.html")
 
     def testAttachments(self):
         db = self.Server.create_db('couchdbkit_test')
         doc = { 'string': 'test', 'number': 4 }
         db.save_doc(doc)
         text_attachment = u"un texte attaché"
-        old_rev = doc['_rev']
-        db.put_attachment(doc, text_attachment, "test", "text/plain")
-        self.assert_(old_rev != doc['_rev'])
-        fetch_attachment = db.fetch_attachment(doc, "test")
-        self.assert_(text_attachment == fetch_attachment)
-        del self.Server['couchdbkit_test']
+        with self.assertRaises(NoLongerSupportedException):
+            db.put_attachment(doc, text_attachment, "test", "text/plain")
+        with self.assertRaises(NoLongerSupportedException):
+            db.fetch_attachment(doc, "test")
 
     def testFetchAttachmentStream(self):
         db = self.Server.create_db('couchdbkit_test')
         doc = { 'string': 'test', 'number': 4 }
         db.save_doc(doc)
         text_attachment = u"a text attachment"
-        db.put_attachment(doc, text_attachment, "test", "text/plain")
-        stream = db.fetch_attachment(doc, "test", stream=True)
-        fetch_attachment = stream.read()
-        self.assert_(text_attachment == fetch_attachment)
-        del self.Server['couchdbkit_test']
+        with self.assertRaises(NoLongerSupportedException):
+            db.put_attachment(doc, text_attachment, "test", "text/plain")
+        with self.assertRaises(NoLongerSupportedException):
+            db.fetch_attachment(doc, "test", stream=True)
 
     def testEmptyAttachment(self):
         db = self.Server.create_db('couchdbkit_test')
         doc = {}
         db.save_doc(doc)
-        db.put_attachment(doc, "", name="test")
-        doc1 = db.get(doc['_id'])
-        attachment = doc1['_attachments']['test']
-        self.assertEqual(0, attachment['length'])
-        del self.Server['couchdbkit_test']
+        with self.assertRaises(NoLongerSupportedException):
+            db.put_attachment(doc, "", name="test")
 
     def testDeleteAttachment(self):
         db = self.Server.create_db('couchdbkit_test')
@@ -412,42 +373,36 @@ class ClientDatabaseTestCase(unittest.TestCase):
         db.save_doc(doc)
 
         text_attachment = "un texte attaché"
-        old_rev = doc['_rev']
-        db.put_attachment(doc, text_attachment, "test", "text/plain")
-        db.delete_attachment(doc, 'test')
-        self.assertRaises(ResourceNotFound, db.fetch_attachment, doc, 'test')
-        del self.Server['couchdbkit_test']
+        with self.assertRaises(NoLongerSupportedException):
+            db.put_attachment(doc, text_attachment, "test", "text/plain")
+        with self.assertRaises(NoLongerSupportedException):
+            db.delete_attachment(doc, 'test')
+        self.assertRaises(NoLongerSupportedException, db.fetch_attachment, doc, 'test')
 
     def testAttachmentsWithSlashes(self):
         db = self.Server.create_db('couchdbkit_test')
         doc = { '_id': 'test/slashes', 'string': 'test', 'number': 4 }
         db.save_doc(doc)
         text_attachment = u"un texte attaché"
-        old_rev = doc['_rev']
-        db.put_attachment(doc, text_attachment, "test", "text/plain")
-        self.assert_(old_rev != doc['_rev'])
-        fetch_attachment = db.fetch_attachment(doc, "test")
-        self.assert_(text_attachment == fetch_attachment)
+        with self.assertRaises(NoLongerSupportedException):
+            db.put_attachment(doc, text_attachment, "test", "text/plain")
+        with self.assertRaises(NoLongerSupportedException):
+            db.fetch_attachment(doc, "test")
 
-        db.put_attachment(doc, text_attachment, "test/test.txt", "text/plain")
-        self.assert_(old_rev != doc['_rev'])
-        fetch_attachment = db.fetch_attachment(doc, "test/test.txt")
-        self.assert_(text_attachment == fetch_attachment)
-
-        del self.Server['couchdbkit_test']
-
+        with self.assertRaises(NoLongerSupportedException):
+            db.put_attachment(doc, text_attachment, "test/test.txt", "text/plain")
+        with self.assertRaises(NoLongerSupportedException):
+            db.fetch_attachment(doc, "test/test.txt")
 
     def testAttachmentUnicode8URI(self):
         db = self.Server.create_db('couchdbkit_test')
         doc = { '_id': u"éàù/slashes", 'string': 'test', 'number': 4 }
         db.save_doc(doc)
         text_attachment = u"un texte attaché"
-        old_rev = doc['_rev']
-        db.put_attachment(doc, text_attachment, "test", "text/plain")
-        self.assert_(old_rev != doc['_rev'])
-        fetch_attachment = db.fetch_attachment(doc, "test")
-        self.assert_(text_attachment == fetch_attachment)
-        del self.Server['couchdbkit_test']
+        with self.assertRaises(NoLongerSupportedException):
+            db.put_attachment(doc, text_attachment, "test", "text/plain")
+        with self.assertRaises(NoLongerSupportedException):
+            db.fetch_attachment(doc, "test")
 
     def testSaveMultipleDocs(self):
         db = self.Server.create_db('couchdbkit_test')
@@ -580,7 +535,6 @@ class ClientDatabaseTestCase(unittest.TestCase):
 
 class ClientViewTestCase(unittest.TestCase):
     def setUp(self):
-        self.couchdb = CouchdbResource()
         self.Server = Server()
 
     def tearDown(self):

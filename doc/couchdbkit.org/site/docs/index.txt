@@ -1,4 +1,0 @@
-title: Couchdbkit Documentation
-page_type: blog
-template: docs/index.html
-

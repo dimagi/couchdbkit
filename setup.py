@@ -14,8 +14,7 @@ if not hasattr(sys, 'version_info') or sys.version_info < (2, 7, 0, 'final'):
 from setuptools import setup, find_packages
 
 # open version module
-version = load_source("version", os.path.join("couchdbkit",
-        "version.py"))
+version = load_source("version", os.path.join("couchdbkit", "version.py"))
 
 
 setup(
@@ -51,7 +50,6 @@ setup(
     zip_safe = False,
 
     install_requires = [
-        'restkit>=4.2.2',
         'jsonobject>=0.9.1',
         'cloudant==2.7.0',
         'six==1.11.0',

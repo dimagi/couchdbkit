@@ -39,20 +39,20 @@ import time
 import cloudant
 from cloudant.client import CouchDB
 from cloudant.database import CouchDatabase
+from cloudant.design_document import DesignDocument
 from cloudant.document import Document
 from cloudant.error import CloudantClientException
 from cloudant.security_document import SecurityDocument
 from requests.exceptions import HTTPError
-from restkit.util import url_quote
 import six
 from six.moves import filter
 from six.moves.urllib.parse import urljoin, unquote
 
 from couchdbkit.logging import error_logger
 from .exceptions import InvalidAttachment, NoResultFound, \
-        ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound
+        ResourceNotFound, ResourceConflict, BulkSaveError, MultipleResultsFound, NoLongerSupportedException
 from . import resource
-from .utils import validate_dbname
+from .utils import validate_dbname, url_quote
 
 from .schema.util import maybe_schema_wrapper
 
@@ -81,19 +81,12 @@ class Server(object):
     A Server object can be used like any `dict` object.
     """
 
-    resource_class = resource.CouchdbResource
-
-    def __init__(self, uri='http://127.0.0.1:5984',
-            uuid_batch_count=DEFAULT_UUID_BATCH_COUNT,
-            resource_class=None, resource_instance=None,
-            **client_opts):
+    def __init__(self, uri='http://127.0.0.1:5984', uuid_batch_count=DEFAULT_UUID_BATCH_COUNT):
 
         """ constructor for Server object
 
         @param uri: uri of CouchDb host
         @param uuid_batch_count: max of uuids to get in one time
-        @param resource_instance: `restkit.resource.CouchdbDBResource` instance.
-            It alows you to set a resource class with custom parameters.
         """
 
         if not uri or uri is None:
@@ -106,17 +99,6 @@ class Server(object):
         self.uuid_batch_count = uuid_batch_count
         self._uuid_batch_count = uuid_batch_count
 
-        if resource_class is not None:
-            self.resource_class = resource_class
-
-        if resource_instance and isinstance(resource_instance,
-                                resource.CouchdbResource):
-            resource_instance.initial['uri'] = uri
-            self.res = resource_instance.clone()
-            if client_opts:
-                self.res.client_opts.update(client_opts)
-        else:
-            self.res = self.resource_class(uri, **client_opts)
         self._uuids = deque()
         # admin_party is true, because the username/pass is passed in uri for now
         self.cloudant_client = CouchDB('', '', url=uri, admin_party=True, connect=True)
@@ -291,7 +273,6 @@ class Database(object):
         if create:
             self.cloudant_database.create()
 
-        self.res = server.res(self.dbname)
         self._request_session = self.server._request_session
         self.database_url = self.cloudant_database.database_url
 
@@ -344,7 +325,7 @@ class Database(object):
         except design docs."""
 
         # save ddocs
-        all_ddocs = self.all_docs(startkey="_design", endkey="_design/"+u"\u9999", include_docs=True)
+        all_ddocs = self.all_docs(startkey=u"_design", endkey=u"_design/\u9999", include_docs=True)
         ddocs = []
         for ddoc in all_ddocs:
             doc = ddoc['doc']
@@ -409,8 +390,10 @@ class Database(object):
             wrapper = schema.wrap
         attachments = params.get('attachments', False)
 
-        if isinstance(docid, six.text_type):
+        if six.PY2 and isinstance(docid, six.text_type):
             docid = docid.encode('utf-8')
+        if six.PY3 and isinstance(docid, bytes):
+            docid = docid.decode('utf-8')
         doc = Document(self.cloudant_database, docid)
         try:
             doc.fetch()
@@ -437,59 +420,13 @@ class Database(object):
     get = open_doc
 
     def list(self, list_name, view_name, **params):
-        """ Execute a list function on the server and return the response.
-        If the response is json it will be deserialized, otherwise the string
-        will be returned.
-
-        Args:
-            @param list_name: should be 'designname/listname'
-            @param view_name: name of the view to run through the list document
-            @param params: params of the list
-        """
-        list_name = list_name.split('/')
-        dname = list_name.pop(0)
-        vname = '/'.join(list_name)
-        list_path = '_design/%s/_list/%s/%s' % (dname, vname, view_name)
-
-        return self.res.get(list_path, **params).json_body
+        raise NoLongerSupportedException
 
     def show(self, show_name, doc_id, **params):
-        """ Execute a show function on the server and return the response.
-        If the response is json it will be deserialized, otherwise the string
-        will be returned.
-
-        Args:
-            @param show_name: should be 'designname/showname'
-            @param doc_id: id of the document to pass into the show document
-            @param params: params of the show
-        """
-        show_name = show_name.split('/')
-        dname = show_name.pop(0)
-        vname = '/'.join(show_name)
-        show_path = '_design/%s/_show/%s/%s' % (dname, vname, doc_id)
-
-        return self.res.get(show_path, **params).json_body
+        raise NoLongerSupportedException
 
     def update(self, update_name, doc_id=None, **params):
-        """ Execute update function on the server and return the response.
-        If the response is json it will be deserialized, otherwise the string
-        will be returned.
-
-        Args:
-            @param update_name: should be 'designname/updatename'
-            @param doc_id: id of the document to pass into the update function
-            @param params: params of the update
-        """
-        update_name = update_name.split('/')
-        dname = update_name.pop(0)
-        uname = '/'.join(update_name)
-
-        if doc_id is None:
-            update_path = '_design/%s/_update/%s' % (dname, uname)
-            return self.res.post(update_path, **params).json_body
-        else:
-            update_path = '_design/%s/_update/%s/%s' % (dname, uname, doc_id)
-            return self.res.put(update_path, **params).json_body
+        raise NoLongerSupportedException
 
     def all_docs(self, by_seq=False, **params):
         """Get all documents from a database
@@ -559,7 +496,7 @@ class Database(object):
             doc1['_attachments'] = resource.encode_attachments(doc['_attachments'])
 
         if '_id' in doc1:
-            docid = doc1['_id'].encode('utf-8')
+            docid = doc1['_id'] if six.PY3 else doc1['_id'].encode('utf-8')
             couch_doc = Document(self.cloudant_database, docid)
             couch_doc.update(doc1)
             try:
@@ -733,7 +670,12 @@ class Database(object):
             couch_doc.document_url,
             params={"rev": couch_doc["_rev"]},
         )
-        res.raise_for_status()
+        try:
+            res.raise_for_status()
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                raise ResourceNotFound
+            raise
         result = res.json()
 
         if schema:
@@ -782,17 +724,28 @@ class Database(object):
         if destination:
             headers.update({"Destination": str(destination)})
             resp = self._request_session.request('copy', self._database_path(docid), headers=headers)
-            resp.raise_for_status()
+            try:
+                resp.raise_for_status()
+            except HTTPError as e:
+                if e.response.status_code == 404:
+                    raise ResourceNotFound
+                raise
             return resp.json()
 
         return {'ok': False}
 
     def raw_view(self, view_path, params):
-        if 'keys' in params:
-            keys = params.pop('keys')
-            return self.res.post(view_path, payload={ 'keys': keys }, **params)
+        params = deepcopy(params)
+        params.pop('dynamic_properties', None)
+        if view_path == '_all_docs':
+            return self.cloudant_database.all_docs(**params)
         else:
-            return self.res.get(view_path, **params)
+            view_path = view_path.split('/')
+            assert len(view_path) == 4
+            ddoc = DesignDocument(self.cloudant_database, view_path[1])
+            ddoc.fetch()
+            view = ddoc.get_view(view_path[3])
+            return view(**params)
 
     def view(self, view_name, schema=None, wrapper=None, **params):
         """ get view results from database. viewname is generally
@@ -843,114 +796,13 @@ class Database(object):
 
     def put_attachment(self, doc, content, name=None, content_type=None,
             content_length=None, headers=None):
-        """ Add attachement to a document. All attachments are streamed.
-
-        @param doc: dict, document object
-        @param content: string or :obj:`File` object.
-        @param name: name or attachment (file name).
-        @param content_type: string, mimetype of attachment.
-        If you don't set it, it will be autodetected.
-        @param content_lenght: int, size of attachment.
-
-        @return: bool, True if everything was ok.
-
-
-        Example:
-
-            >>> from simplecouchdb import server
-            >>> server = server()
-            >>> db = server.create_db('couchdbkit_test')
-            >>> doc = { 'string': 'test', 'number': 4 }
-            >>> db.save(doc)
-            >>> text_attachment = u'un texte attaché'
-            >>> db.put_attachment(doc, text_attachment, "test", "text/plain")
-            True
-            >>> file = db.fetch_attachment(doc, 'test')
-            >>> result = db.delete_attachment(doc, 'test')
-            >>> result['ok']
-            True
-            >>> db.fetch_attachment(doc, 'test')
-            >>> del server['couchdbkit_test']
-            {u'ok': True}
-        """
-
-        if not headers:
-            headers = {}
-
-        if not content:
-            content = ""
-            content_length = 0
-
-        if name is None:
-            if hasattr(content, "name"):
-                name = content.name
-            else:
-                raise InvalidAttachment('You should provide a valid attachment name')
-
-        name = url_quote(name, safe="")
-        if content_type is None:
-            content_type = ';'.join(filter(None, guess_type(name)))
-
-        if content_type:
-            headers['Content-Type'] = content_type
-
-        # add appropriate headers
-        if content_length:
-            headers['Content-Length'] = content_length
-
-        doc1, schema = _maybe_serialize(doc)
-
-        docid = resource.escape_docid(doc1['_id'])
-        res = self.res(docid).put(name, payload=content,
-                headers=headers, rev=doc1['_rev']).json_body
-
-        if res['ok']:
-            new_doc = self.get(doc1['_id'], rev=res['rev'])
-            doc.update(new_doc)
-        return res['ok']
+        raise NoLongerSupportedException
 
     def delete_attachment(self, doc, name, headers=None):
-        """ delete attachement to the document
-
-        @param doc: dict, document object in python
-        @param name: name of attachement
-
-        @return: dict, with member ok set to True if delete was ok.
-        """
-        doc1, schema = _maybe_serialize(doc)
-
-        docid = resource.escape_docid(doc1['_id'])
-        name = url_quote(name, safe="")
-
-        res = self.res(docid).delete(name, rev=doc1['_rev'],
-                headers=headers).json_body
-        if res['ok']:
-            new_doc = self.get(doc1['_id'], rev=res['rev'])
-            doc.update(new_doc)
-        return res['ok']
+        raise NoLongerSupportedException
 
     def fetch_attachment(self, id_or_doc, name, stream=False, headers=None):
-        """ get attachment in a document
-
-        @param id_or_doc: str or dict, doc id or document dict
-        @param name: name of attachment default: default result
-        @param stream: boolean, if True return a file object
-        @return: `restkit.httpc.Response` object
-        """
-
-        if isinstance(id_or_doc, six.string_types):
-            docid = id_or_doc
-        else:
-            doc, schema = _maybe_serialize(id_or_doc)
-            docid = doc['_id']
-
-        docid = resource.escape_docid(docid)
-        name = url_quote(name, safe="")
-
-        resp = self.res(docid).get(name, headers=headers)
-        if stream:
-            return resp.body_stream()
-        return resp.body_string(charset="utf-8")
+        raise NoLongerSupportedException
 
 
     def ensure_full_commit(self):
@@ -1001,7 +853,8 @@ class ViewResults(object):
 
         """
         assert not (wrapper and schema)
-        wrap_doc = params.get('wrap_doc', schema is not None)
+        params = deepcopy(params)
+        wrap_doc = params.pop('wrap_doc', schema is not None)
         if schema:
             schema_wrapper = maybe_schema_wrapper(schema, params)
             def row_wrapper(row):
@@ -1091,7 +944,7 @@ class ViewResults(object):
                 pass
         self._dynamic_keys = []
 
-        self._result_cache = self.fetch_raw().json_body
+        self._result_cache = self.fetch_raw()
         assert isinstance(self._result_cache, dict), 'received an invalid ' \
             'response of type %s: %s' % \
             (type(self._result_cache), repr(self._result_cache))

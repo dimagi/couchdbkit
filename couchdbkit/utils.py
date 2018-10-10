@@ -18,7 +18,6 @@ from hashlib import md5
 import os
 import re
 import sys
-import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
 import six
 from six.moves import range
 
@@ -233,3 +232,13 @@ class ProxyDict(jsonobject.utils.SimpleDict):
 
     def __copy__(self):
         return self.copy()
+
+
+# From https://benoitc.github.io/restkit/api/restkit.util-pysrc.html#url_quote
+def url_quote(s, safe='/:'):
+    """URL encode a single string with a given encoding."""
+    if isinstance(s, six.text_type):
+        s = s.encode('utf-8')
+    elif not isinstance(s, six.binary_type):
+        s = six.binary_type(s)
+    return six.moves.urllib.parse.quote(s, safe=safe)
