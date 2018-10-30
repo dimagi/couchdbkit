@@ -65,11 +65,15 @@ def install_request_logger():
             raise
         finally:
             url_parts = url.split('/', 4)
-            if len(url_parts) == 5:
+            len_parts = len(url_parts)
+            if len_parts == 5:
                 database, path = url_parts[3:]
+            elif len_parts == 4:
+                database = url_parts[3]
+                path = '/'
             else:
                 database = '<unknown>'
-                path = url
+                path = '<n/a>'
             info = {
                 "method": method,
                 "database": database,
