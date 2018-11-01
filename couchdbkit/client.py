@@ -81,12 +81,15 @@ class Server(object):
     A Server object can be used like any `dict` object.
     """
 
-    def __init__(self, uri='http://127.0.0.1:5984', uuid_batch_count=DEFAULT_UUID_BATCH_COUNT):
+    def __init__(self, uri='http://127.0.0.1:5984',
+                 uuid_batch_count=DEFAULT_UUID_BATCH_COUNT,
+                 db_params=None):
 
         """ constructor for Server object
 
         @param uri: uri of CouchDb host
         @param uuid_batch_count: max of uuids to get in one time
+        @param db_params: dict of extra CouchDB parameters
         """
 
         if not uri or uri is None:
@@ -100,8 +103,11 @@ class Server(object):
         self._uuid_batch_count = uuid_batch_count
 
         self._uuids = deque()
-        # admin_party is true, because the username/pass is passed in uri for now
-        self.cloudant_client = CouchDB('', '', url=uri, admin_party=True, connect=True)
+        if db_params is not None:
+            self.cloudant_client = CouchDB(url=uri, connect=True, **db_params)
+        else:
+            # admin_party is true, because the username/pass is passed in uri for now
+            self.cloudant_client = CouchDB('', '', url=uri, admin_party=True, connect=True)
 
     @property
     def _request_session(self):
@@ -252,7 +258,7 @@ class Database(object):
         @param create: boolean, False by default,
         if True try to create the database.
         @param server: Server instance
-
+        @param **params: extra Server parameters; ignored if server provided
         """
         self.uri = uri.rstrip('/')
         self.server_uri, self.dbname = self.uri.rsplit("/", 1)
