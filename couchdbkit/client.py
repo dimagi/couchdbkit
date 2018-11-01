@@ -81,8 +81,7 @@ class Server(object):
     A Server object can be used like any `dict` object.
     """
 
-    def __init__(self, uri='http://127.0.0.1:5984', uuid_batch_count=DEFAULT_UUID_BATCH_COUNT,
-                 username='', password='', **kwargs):
+    def __init__(self, uri='http://127.0.0.1:5984', uuid_batch_count=DEFAULT_UUID_BATCH_COUNT):
 
         """ constructor for Server object
 
@@ -101,11 +100,8 @@ class Server(object):
         self._uuid_batch_count = uuid_batch_count
 
         self._uuids = deque()
-        if not (username and password):
-            # for backward compatability, assume admin_party when no username and password
-            kwargs['admin_party'] = True
-
-        self.cloudant_client = CouchDB(username, password, url=uri, connect=True, **kwargs)
+        # admin_party is true, because the username/pass is passed in uri for now
+        self.cloudant_client = CouchDB('', '', url=uri, admin_party=True, connect=True)
 
     @property
     def _request_session(self):
