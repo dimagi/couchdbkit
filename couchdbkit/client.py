@@ -33,8 +33,8 @@ from collections import deque
 from copy import deepcopy
 from itertools import groupby
 import json
-from mimetypes import guess_type
 import time
+from urlparse import urlparse
 
 import cloudant
 from cloudant.client import CouchDB
@@ -81,15 +81,12 @@ class Server(object):
     A Server object can be used like any `dict` object.
     """
 
-    def __init__(self, uri='http://127.0.0.1:5984',
-                 uuid_batch_count=DEFAULT_UUID_BATCH_COUNT,
-                 db_params=None):
+    def __init__(self, uri='http://127.0.0.1:5984', uuid_batch_count=DEFAULT_UUID_BATCH_COUNT):
 
         """ constructor for Server object
 
         @param uri: uri of CouchDb host
         @param uuid_batch_count: max of uuids to get in one time
-        @param db_params: dict of extra CouchDB parameters
         """
 
         if not uri or uri is None:
@@ -98,16 +95,24 @@ class Server(object):
         if uri.endswith("/"):
             uri = uri[:-1]
 
+        url = urlparse(uri)
+        if url.password is not None:
+            # remove username and password from uri to reduce chances of
+            # them showing up in logs
+            uri = url._replace(netloc=url.netloc.rsplit('@', 1)[1]).geturl()
+            params = {
+                "user": url.username,
+                "auth_token": url.password,
+                "use_basic_auth": True,
+            }
+        else:
+            params = {"user": "", "auth_token": "", "admin_party": True}
+
         self.uri = uri
         self.uuid_batch_count = uuid_batch_count
         self._uuid_batch_count = uuid_batch_count
-
         self._uuids = deque()
-        if db_params is not None:
-            self.cloudant_client = CouchDB(url=uri, connect=True, **db_params)
-        else:
-            # admin_party is true, because the username/pass is passed in uri for now
-            self.cloudant_client = CouchDB('', '', url=uri, admin_party=True, connect=True)
+        self.cloudant_client = CouchDB(url=uri, connect=True, **params)
 
     @property
     def _request_session(self):
@@ -258,7 +263,7 @@ class Database(object):
         @param create: boolean, False by default,
         if True try to create the database.
         @param server: Server instance
-        @param **params: extra Server parameters; ignored if server provided
+
         """
         self.uri = uri.rstrip('/')
         self.server_uri, self.dbname = self.uri.rsplit("/", 1)
