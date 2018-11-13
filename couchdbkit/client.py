@@ -35,6 +35,7 @@ from itertools import groupby
 import json
 from mimetypes import guess_type
 import time
+from urlparse import urlparse
 
 import cloudant
 from cloudant.client import CouchDB
@@ -95,13 +96,22 @@ class Server(object):
         if uri.endswith("/"):
             uri = uri[:-1]
 
+        url = urlparse(uri)
+        if url.password is not None:
+            uri = url._replace(netloc=url.netloc.rsplit('@', 1)[1]).geturl()
+            params = {
+                "user": url.username,
+                "auth_token": url.password,
+                "use_basic_auth": True,
+            }
+        else:
+            params = {"user": "", "auth_token": "", "admin_party": True}
+
         self.uri = uri
         self.uuid_batch_count = uuid_batch_count
         self._uuid_batch_count = uuid_batch_count
-
         self._uuids = deque()
-        # admin_party is true, because the username/pass is passed in uri for now
-        self.cloudant_client = CouchDB('', '', url=uri, admin_party=True, connect=True)
+        self.cloudant_client = CouchDB(url=uri, connect=True, **params)
 
     @property
     def _request_session(self):
