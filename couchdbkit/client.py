@@ -97,6 +97,8 @@ class Server(object):
 
         url = urlparse(uri)
         if url.password is not None:
+            # remove username and password from uri to reduce chances of
+            # them showing up in logs
             uri = url._replace(netloc=url.netloc.rsplit('@', 1)[1]).geturl()
             params = {
                 "user": url.username,
