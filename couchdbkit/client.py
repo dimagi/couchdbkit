@@ -33,7 +33,6 @@ from collections import deque
 from copy import deepcopy
 from itertools import groupby
 import json
-from mimetypes import guess_type
 import time
 from urlparse import urlparse
 
