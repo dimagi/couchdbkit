@@ -34,7 +34,7 @@ from copy import deepcopy
 from itertools import groupby
 import json
 import time
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 
 import cloudant
 from cloudant.client import CouchDB
