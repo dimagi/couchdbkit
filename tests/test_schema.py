@@ -1287,7 +1287,7 @@ class PropertyTestCase(unittest.TestCase):
         a2 = A()
         a2.s = 'test2'
         b.slm = [a2, a1]
-        b.slm.sort(key=lambda item: item['s'])
+        b.slm = sorted(b.slm, key=lambda item: item['s'])
         self.assertEqual([b.slm[0].s, b.slm[1].s], [a1.s, a2.s])
         self.assertEqual(b._doc, {
             'doc_type': 'B',
