@@ -1796,8 +1796,12 @@ if support_setproperty:
             with self.assertRaises(ValueError) as cm:
                 class C(Document):
                     s = SetProperty(item_type=tuple)
-            self.assertIn(
-                "item_type <type 'tuple'> not in ", str(cm.exception))
+            if six.PY3:
+                self.assertIn(
+                    "item_type <class 'tuple'> not in ", str(cm.exception))
+            else:
+                self.assertIn(
+                    "item_type <type 'tuple'> not in ", str(cm.exception))
 
 
         def testSetPropertyAssignment(self):
