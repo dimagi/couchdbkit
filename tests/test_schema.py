@@ -1375,8 +1375,9 @@ class PropertyTestCase(unittest.TestCase):
         try:
             a.validate()
         except BadValueError as e:
-            pass
-        self.assert_(str(e) == 'Property l is required.')
+            self.assert_(str(e) == 'Property l is required.')
+        else:
+            self.assert_(False)
 
         d = datetime(2009, 4, 13, 22, 56, 10, 967388)
         a.l.append(d)
@@ -1586,12 +1587,9 @@ class PropertyTestCase(unittest.TestCase):
         try:
             a.save()
         except BadValueError as e:
-            self.assert_(False)  # 1
-        except Exception as q:
-            self.assert_(False)  # 2
+            self.assert_(str(e) == 'Property d is required.')
         else:
-            self.assert_(False)  # 3
-        self.assert_(str(e) == 'Property d is required.')
+            self.assert_(False)
 
         d = datetime(2009, 4, 13, 22, 56, 10, 967388)
         a.d['date'] = d
