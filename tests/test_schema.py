@@ -1586,9 +1586,11 @@ class PropertyTestCase(unittest.TestCase):
         try:
             a.save()
         except BadValueError as e:
-            pass
+            self.assert_(False)  # 1
         except Exception as q:
-            raise q
+            self.assert_(False)  # 2
+        else:
+            self.assert_(False)  # 3
         self.assert_(str(e) == 'Property d is required.')
 
         d = datetime(2009, 4, 13, 22, 56, 10, 967388)
