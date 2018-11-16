@@ -11,9 +11,17 @@ __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 import datetime
 import decimal
 import unittest
+from collections import Counter
 
 from couchdbkit import *
 from couchdbkit.schema.properties import support_setproperty
+
+
+def assertItemsEqual(self, expected, actual):
+    self.assertEqual(Counter(expected), Counter(actual))
+
+
+unittest.TestCase.assertItemsEqual = assertItemsEqual
 
 
 class DocumentTestCase(unittest.TestCase):
