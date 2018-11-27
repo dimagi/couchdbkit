@@ -20,6 +20,7 @@ tests/*.err
 store/*
 *.DS_Store
 *.beam
+.idea
 *.log
 couchdbkit.egg-info
 dist/
