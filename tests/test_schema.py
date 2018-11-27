@@ -15,6 +15,9 @@ import unittest
 from couchdbkit import *
 from couchdbkit.schema.properties import support_setproperty
 
+if six.PY3:
+    unittest.TestCase.assertItemsEqual = unittest.TestCase.assertCountEqual
+
 
 class DocumentTestCase(unittest.TestCase):
     def setUp(self):
@@ -1374,8 +1377,9 @@ class PropertyTestCase(unittest.TestCase):
         try:
             a.validate()
         except BadValueError as e:
-            pass
-        self.assert_(str(e) == 'Property l is required.')
+            self.assert_(str(e) == 'Property l is required.')
+        else:
+            self.assert_(False)
 
         d = datetime(2009, 4, 13, 22, 56, 10, 967388)
         a.l.append(d)
@@ -1585,8 +1589,9 @@ class PropertyTestCase(unittest.TestCase):
         try:
             a.save()
         except BadValueError as e:
-            pass
-        self.assert_(str(e) == 'Property d is required.')
+            self.assert_(str(e) == 'Property d is required.')
+        else:
+            self.assert_(False)
 
         d = datetime(2009, 4, 13, 22, 56, 10, 967388)
         a.d['date'] = d
@@ -1795,8 +1800,12 @@ if support_setproperty:
             with self.assertRaises(ValueError) as cm:
                 class C(Document):
                     s = SetProperty(item_type=tuple)
-            self.assertIn(
-                "item_type <type 'tuple'> not in ", str(cm.exception))
+            if six.PY3:
+                self.assertIn(
+                    "item_type <class 'tuple'> not in ", str(cm.exception))
+            else:
+                self.assertIn(
+                    "item_type <type 'tuple'> not in ", str(cm.exception))
 
 
         def testSetPropertyAssignment(self):

@@ -59,5 +59,5 @@ def encode_attachments(attachments):
         if v.get('stub', False):
             continue
         else:
-            v['data'] = re_sp.sub('', base64.b64encode(v['data']))
+            v['data'] = re_sp.sub('', base64.b64encode(v['data'].encode('utf-8')).decode('utf-8'))
     return attachments

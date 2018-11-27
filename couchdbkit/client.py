@@ -410,7 +410,7 @@ class Database(object):
             doc.fetch()
         except HTTPError as e:
             if e.response.status_code == 404:
-                raise ResourceNotFound(json.loads(e.response.content)['reason'])
+                raise ResourceNotFound(json.loads(e.response.content.decode('utf-8'))['reason'])
             raise
         doc_dict = dict(doc)
 
