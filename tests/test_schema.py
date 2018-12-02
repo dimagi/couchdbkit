@@ -1304,13 +1304,14 @@ class PropertyTestCase(unittest.TestCase):
             'slm': [{'doc_type': 'A', 's': six.text_type(a2.s)},
                     {'doc_type': 'A', 's': six.text_type(a1.s)}]
         })
-        b.slm.sort(cmp=lambda x, y: cmp(x['s'].lower(), y['s'].lower()))
-        self.assertEqual([b.slm[0].s, b.slm[1].s], [a1.s, a2.s])
-        self.assertEqual(b._doc, {
-            'doc_type': 'B',
-            'slm': [{'doc_type': 'A', 's': six.text_type(a1.s)},
-                    {'doc_type': 'A', 's': six.text_type(a2.s)}]
-        })
+        if six.PY2:
+            b.slm.sort(cmp=lambda x, y: cmp(x['s'].lower(), y['s'].lower()))
+            self.assertEqual([b.slm[0].s, b.slm[1].s], [a1.s, a2.s])
+            self.assertEqual(b._doc, {
+                'doc_type': 'B',
+                'slm': [{'doc_type': 'A', 's': six.text_type(a1.s)},
+                        {'doc_type': 'A', 's': six.text_type(a2.s)}]
+            })
 
     def testSchemaDictProperty(self):
         class A(DocumentSchema):
