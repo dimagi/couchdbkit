@@ -50,7 +50,7 @@ setup(
     zip_safe = False,
 
     install_requires = [
-        'jsonobject>=0.9.1',
+        'jsonobject>=0.9.7',
         'cloudant==2.7.0',
         'six==1.11.0',
     ],
