@@ -1054,7 +1054,7 @@ class PropertyTestCase(unittest.TestCase):
         a2.s = 'test2'
         a3 = A()
         a3.s = 'test3'
-        return
+        # return
         b.slm[0:1] = [a1, a2]
         return
         self.assertEqual(len(b.slm), 2)
