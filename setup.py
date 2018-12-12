@@ -51,7 +51,7 @@ setup(
 
     install_requires = [
         'jsonobject>=0.9.7',
-        'cloudant==2.7.0',
+        'cloudant~=2.7',
         'six==1.11.0',
     ],
     provides=['couchdbkit'],
