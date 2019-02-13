@@ -52,7 +52,7 @@ setup(
     install_requires = [
         'jsonobject>=0.9.8',
         'cloudant~=2.7',
-        'six==1.11.0',
+        'six',
     ],
     provides=['couchdbkit'],
     obsoletes=['couchdbkit'],
