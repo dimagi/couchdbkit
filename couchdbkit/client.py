@@ -43,6 +43,7 @@ from cloudant.design_document import DesignDocument
 from cloudant.document import Document
 from cloudant.error import CloudantClientException
 from cloudant.security_document import SecurityDocument
+from cloudant.view import View
 from requests.exceptions import HTTPError
 import six
 from six.moves import filter
@@ -753,9 +754,7 @@ class Database(object):
         else:
             view_path = view_path.split('/')
             assert len(view_path) == 4
-            ddoc = DesignDocument(self.cloudant_database, view_path[1])
-            ddoc.fetch()
-            view = ddoc.get_view(view_path[3])
+            view = View(DesignDocument(self.cloudant_database, view_path[1]), view_path[3])
             return view(**params)
 
     def view(self, view_name, schema=None, wrapper=None, **params):
