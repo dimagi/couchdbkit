@@ -8,8 +8,8 @@ from imp import load_source
 import os
 import sys
 
-if not hasattr(sys, 'version_info') or sys.version_info < (2, 7, 0, 'final'):
-    raise SystemExit("couchdbkit requires Python 2.7 or later.")
+if not hasattr(sys, 'version_info') or sys.version_info < (3, 5, 0):
+    raise SystemExit("couchdbkit requires Python 3.5 or later.")
 
 from setuptools import setup, find_packages
 
@@ -39,8 +39,11 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3 :: Only',
         'Topic :: Database',
         'Topic :: Utilities',
         'Topic :: Software Development :: Libraries :: Python Modules',
