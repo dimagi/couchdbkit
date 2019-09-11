@@ -85,7 +85,6 @@ from django.forms.util import ErrorList
 from django.forms.forms import BaseForm, get_declared_fields
 from django.forms import fields as f
 from django.forms.widgets import media_property
-import six
 
 FIELDS_PROPERTES_MAPPING = {
     "StringProperty": f.CharField,
@@ -265,5 +264,5 @@ class BaseDocumentForm(BaseForm):
         
         return self.instance
             
-class DocumentForm(six.with_metaclass(DocumentFormMetaClass, BaseDocumentForm)):
+class DocumentForm(BaseDocumentForm, metaclass=DocumentFormMetaClass):
     """ The document form object """

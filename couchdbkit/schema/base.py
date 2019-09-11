@@ -19,7 +19,6 @@ convert_property, \
 LazyDict, LazyList
 from ..exceptions import DuplicatePropertyError, ResourceNotFound, \
 ReservedWordError
-import six
 
 
 __all__ = ['ReservedWordError', 'DocumentSchema',
@@ -63,7 +62,7 @@ class SchemaProperties(jsonobject.JsonObjectMeta):
         return cls
 
 
-class DocumentSchema(six.with_metaclass(SchemaProperties, jsonobject.JsonObject)):
+class DocumentSchema(jsonobject.JsonObject, metaclass=SchemaProperties):
 
     _validate_required_lazily = True
     _doc_type_attr = 'doc_type'

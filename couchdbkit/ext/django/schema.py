@@ -20,7 +20,6 @@ add possibility to a document to register itself in CouchdbkitHandler
 from __future__ import absolute_import
 import re
 import sys
-import six
 
 try:
     from django.db.models.options import get_verbose_name
@@ -147,7 +146,7 @@ class DocumentMeta(schema.SchemaProperties):
         else:
             setattr(cls, name, value)
 
-class Document(six.with_metaclass(DocumentMeta, schema.Document)):
+class Document(schema.Document, metaclass=DocumentMeta):
     """ Document object for django extension """
 
     get_id = property(lambda self: self['_id'])
