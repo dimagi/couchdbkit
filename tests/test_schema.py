@@ -5,7 +5,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-import six
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import datetime
@@ -14,9 +13,6 @@ import unittest
 
 from couchdbkit import *
 from couchdbkit.schema.properties import support_setproperty
-
-if six.PY3:
-    unittest.TestCase.assertItemsEqual = unittest.TestCase.assertCountEqual
 
 
 class DocumentTestCase(unittest.TestCase):
@@ -1305,16 +1301,6 @@ class PropertyTestCase(unittest.TestCase):
                     {'doc_type': 'A', 's': str(a1.s)}]
         })
 
-        # Only test in Python 2, since sort does not take the `cmp` kwarg in Python 3.
-        if six.PY2:
-            b.slm.sort(cmp=lambda x, y: cmp(x['s'].lower(), y['s'].lower()))
-            self.assertEqual([b.slm[0].s, b.slm[1].s], [a1.s, a2.s])
-            self.assertEqual(b._doc, {
-                'doc_type': 'B',
-                'slm': [{'doc_type': 'A', 's': str(a1.s)},
-                        {'doc_type': 'A', 's': str(a2.s)}]
-            })
-
     def testSchemaDictProperty(self):
         class A(DocumentSchema):
             i = IntegerProperty()
@@ -1799,17 +1785,12 @@ if support_setproperty:
             self.assertEqual(a._doc, {'doc_type': 'A', 's': []})
             b = B()
             self.assertEqual(b._doc['doc_type'], 'B')
-            self.assertItemsEqual(b._doc['s'], [42, 24])
+            self.assertCountEqual(b._doc['s'], [42, 24])
             with self.assertRaises(ValueError) as cm:
                 class C(Document):
                     s = SetProperty(item_type=tuple)
-            if six.PY3:
-                self.assertIn(
-                    "item_type <class 'tuple'> not in ", str(cm.exception))
-            else:
-                self.assertIn(
-                    "item_type <type 'tuple'> not in ", str(cm.exception))
-
+            self.assertIn(
+                "item_type <class 'tuple'> not in ", str(cm.exception))
 
         def testSetPropertyAssignment(self):
             """SetProperty value assignment, len, in & not in
@@ -1820,7 +1801,7 @@ if support_setproperty:
             a = A()
             a.s = set(('foo', 'bar'))
             self.assertEqual(a.s, set(('foo', 'bar')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'bar'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'bar'])
             self.assertEqual(len(a.s), 2)
             self.assertEqual(len(a._doc['s']), 2)
             self.assertIn('foo', a.s)
@@ -1840,7 +1821,7 @@ if support_setproperty:
             a = A()
             a.s = set((d1, ))
             self.assertEqual(a.s, set((d1, )))
-            self.assertItemsEqual(a._doc['s'], ['2011-03-15T17:08:01Z'])
+            self.assertCountEqual(a._doc['s'], ['2011-03-15T17:08:01Z'])
             self.assertEqual(len(a.s), 1)
             self.assertEqual(len(a._doc['s']), 1)
             self.assertIn(d1, a.s)
@@ -1938,23 +1919,23 @@ if support_setproperty:
             a.s = set(iter1)
             a.s.update(iter1)
             self.assertEqual(a.s, set(('foo', 'bar')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'bar'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'bar'])
             a.s = set(iter1)
             a.s.update(iter2)
             self.assertEqual(a.s, set(('foo', 'bar', 'baz')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'bar', 'baz'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'bar', 'baz'])
             a.s = set(iter1)
             a.s.update(iter2, iter3)
             self.assertEqual(a.s, set(('foo', 'bar', 'baz', 'fiz')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'bar', 'baz', 'fiz'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'bar', 'baz', 'fiz'])
             a.s = set(iter1)
             a.s |= set(iter2)
             self.assertEqual(a.s, set(('foo', 'bar', 'baz')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'bar', 'baz'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'bar', 'baz'])
             a.s = set(iter1)
             a.s |= set(iter2) | set(iter3)
             self.assertEqual(a.s, set(('foo', 'bar', 'baz', 'fiz')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'bar', 'baz', 'fiz'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'bar', 'baz', 'fiz'])
 
 
         def testSetPropertyIntersectionUpdate(self):
@@ -1970,23 +1951,23 @@ if support_setproperty:
             a.s = set(iter1)
             a.s.intersection_update(iter1)
             self.assertEqual(a.s, set(('foo', 'baz')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'baz'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'baz'])
             a.s = set(iter1)
             a.s.intersection_update(iter2)
             self.assertEqual(a.s, set(('baz', )))
-            self.assertItemsEqual(a._doc['s'], ['baz'])
+            self.assertCountEqual(a._doc['s'], ['baz'])
             a.s = set(iter1)
             a.s.intersection_update(iter2, iter3)
             self.assertEqual(a.s, set())
-            self.assertItemsEqual(a._doc['s'], [])
+            self.assertCountEqual(a._doc['s'], [])
             a.s = set(iter1)
             a.s &= set(iter2)
             self.assertEqual(a.s, set(('baz', )))
-            self.assertItemsEqual(a._doc['s'], ['baz'])
+            self.assertCountEqual(a._doc['s'], ['baz'])
             a.s = set(iter1)
             a.s &= set(iter2) & set(iter3)
             self.assertEqual(a.s, set())
-            self.assertItemsEqual(a._doc['s'], [])
+            self.assertCountEqual(a._doc['s'], [])
 
 
         def testSetPropertyDifferenceUpdate(self):
@@ -2006,11 +1987,11 @@ if support_setproperty:
             a.s = set(iter1)
             a.s.difference_update(iter2)
             self.assertEqual(a.s, set(('foo', 'fiz')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'fiz'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'fiz'])
             a.s = set(iter1)
             a.s.difference_update(iter2, iter3)
             self.assertEqual(a.s, set(('foo', )))
-            self.assertItemsEqual(a._doc['s'], ['foo'])
+            self.assertCountEqual(a._doc['s'], ['foo'])
             a.s = set(iter1)
             a.s -= set(iter1)
             self.assertEqual(a.s, set())
@@ -2018,11 +1999,11 @@ if support_setproperty:
             a.s = set(iter1)
             a.s -= set(iter2)
             self.assertEqual(a.s, set(('foo', 'fiz')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'fiz'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'fiz'])
             a.s = set(iter1)
             a.s -= set(iter2) | set(iter3)
             self.assertEqual(a.s, set(('foo', )))
-            self.assertItemsEqual(a._doc['s'], ['foo'])
+            self.assertCountEqual(a._doc['s'], ['foo'])
 
 
         def testSetPropertySymmetricDifferenceUpdate(self):
@@ -2041,7 +2022,7 @@ if support_setproperty:
             a.s = set(iter1)
             a.s.symmetric_difference_update(iter2)
             self.assertEqual(a.s, set(('foo', 'bar', 'fiz')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'bar', 'fiz'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'bar', 'fiz'])
             a.s = set(iter1)
             a.s ^= set(iter1)
             self.assertEqual(a.s, set())
@@ -2049,7 +2030,7 @@ if support_setproperty:
             a.s = set(iter1)
             a.s ^= set(iter2)
             self.assertEqual(a.s, set(('foo', 'bar', 'fiz')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'bar', 'fiz'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'bar', 'fiz'])
 
 
         def testSetPropertyAdd(self):
@@ -2062,10 +2043,10 @@ if support_setproperty:
             a.s = set(('foo', 'bar'))
             a.s.add('bar')
             self.assertEqual(a.s, set(('foo', 'bar')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'bar'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'bar'])
             a.s.add('baz')
             self.assertEqual(a.s, set(('foo', 'bar', 'baz')))
-            self.assertItemsEqual(a._doc['s'], ['foo', 'bar', 'baz'])
+            self.assertCountEqual(a._doc['s'], ['foo', 'bar', 'baz'])
 
 
         def testSetPropertyRemove(self):
@@ -2078,7 +2059,7 @@ if support_setproperty:
             a.s = set(('foo', 'bar'))
             a.s.remove('foo')
             self.assertEqual(a.s, set(('bar', )))
-            self.assertItemsEqual(a._doc['s'], ['bar'])
+            self.assertCountEqual(a._doc['s'], ['bar'])
             with self.assertRaises(KeyError):
                 a.s.remove('foo')
 
@@ -2093,10 +2074,10 @@ if support_setproperty:
             a.s = set(('foo', 'bar'))
             a.s.discard('foo')
             self.assertEqual(a.s, set(('bar', )))
-            self.assertItemsEqual(a._doc['s'], ['bar'])
+            self.assertCountEqual(a._doc['s'], ['bar'])
             a.s.discard('foo')
             self.assertEqual(a.s, set(('bar', )))
-            self.assertItemsEqual(a._doc['s'], ['bar'])
+            self.assertCountEqual(a._doc['s'], ['bar'])
 
 
         def testSetPropertyPop(self):

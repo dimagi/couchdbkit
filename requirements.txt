@@ -1,3 +1,2 @@
 jsonobject>=0.6.0
 cloudant~=2.7
-six

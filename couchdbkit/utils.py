@@ -21,8 +21,6 @@ import string
 from hashlib import md5
 from urllib.parse import quote, unquote
 
-import six
-
 
 try:
     import ujson as json
@@ -241,6 +239,6 @@ def url_quote(s, safe='/:'):
     """URL encode a single string with a given encoding."""
     if isinstance(s, str):
         s = s.encode('utf-8')
-    elif not isinstance(s, six.binary_type):
-        s = six.binary_type(s)
+    elif not isinstance(s, bytes):
+        s = bytes(s)
     return quote(s, safe=safe)
