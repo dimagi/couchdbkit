@@ -45,7 +45,6 @@ from cloudant.error import CloudantClientException
 from cloudant.security_document import SecurityDocument
 from cloudant.view import View
 from requests.exceptions import HTTPError
-import six
 
 from couchdbkit.logging import error_logger
 from .exceptions import InvalidAttachment, NoResultFound, \
@@ -400,9 +399,7 @@ class Database(object):
             wrapper = schema.wrap
         attachments = params.get('attachments', False)
 
-        if six.PY2 and isinstance(docid, str):
-            docid = docid.encode('utf-8')
-        if six.PY3 and isinstance(docid, bytes):
+        if isinstance(docid, bytes):
             docid = docid.decode('utf-8')
         doc = Document(self.cloudant_database, docid)
         try:
@@ -506,7 +503,7 @@ class Database(object):
             doc1['_attachments'] = resource.encode_attachments(doc['_attachments'])
 
         if '_id' in doc1:
-            docid = doc1['_id'] if six.PY3 else doc1['_id'].encode('utf-8')
+            docid = doc1['_id']
             couch_doc = Document(self.cloudant_database, docid)
             couch_doc.update(doc1)
             try:
@@ -540,7 +537,7 @@ class Database(object):
             doc1.update({'_id': res.get('_id'), '_rev': res.get('_rev')})
 
         if schema:
-            for key, value in six.iteritems(doc.__class__.wrap(doc1)):
+            for key, value in doc.__class__.wrap(doc1).items():
                 doc[key] = value
         else:
             doc.update(doc1)

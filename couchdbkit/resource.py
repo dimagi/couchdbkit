@@ -25,7 +25,6 @@ import re
 
 from . import __version__
 from .utils import json, url_quote
-import six
 
 USER_AGENT = 'couchdbkit/%s' % __version__
 
@@ -55,7 +54,7 @@ def escape_docid(docid):
 
 re_sp = re.compile('\s')
 def encode_attachments(attachments):
-    for k, v in six.iteritems(attachments):
+    for k, v in attachments.items():
         if v.get('stub', False):
             continue
         else:

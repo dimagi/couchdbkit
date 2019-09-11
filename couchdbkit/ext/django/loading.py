@@ -29,7 +29,6 @@ from couchdbkit import Server
 from couchdbkit import push
 from couchdbkit.exceptions import ResourceNotFound
 from django.conf import settings
-import six
 
 COUCHDB_DATABASES = getattr(settings, "COUCHDB_DATABASES", [])
 COUCHDB_TIMEOUT = getattr(settings, "COUCHDB_TIMEOUT", 300)
@@ -57,7 +56,7 @@ class CouchdbkitHandler(object):
             )
 
         # create databases sessions
-        for app_name, app_setting in six.iteritems(databases):
+        for app_name, app_setting in databases.items():
             uri = app_setting['URL']
 
             try:

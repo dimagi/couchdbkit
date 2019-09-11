@@ -40,7 +40,6 @@ import re
 
 from ..exceptions import MacroError
 from ..utils import read_file, read_json, to_bytestring, json
-import six
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +48,7 @@ def package_shows(doc, funcs, app_dir, objs):
    apply_lib(doc, funcs, app_dir, objs)
          
 def package_views(doc, views, app_dir, objs):
-   for view, funcs in six.iteritems(views):
+   for view, funcs in views.items():
        if hasattr(funcs, "items"):
            apply_lib(doc, funcs, app_dir, objs)
 
@@ -156,7 +155,7 @@ def run_json_macros(doc, f_string, app_dir):
    if not included:
        return f_string
 
-   for k, v in six.iteritems(included):
+   for k, v in included.items():
        varstrings.append("var %s = %s;" % (k, json.dumps(v).encode('utf-8')))
 
    return re_json.sub(rjson2, f_string)
