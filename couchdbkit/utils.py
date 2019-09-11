@@ -12,14 +12,16 @@ from __future__ import with_statement
 
 from __future__ import absolute_import
 from __future__ import print_function
+
 import codecs
-import string
-from hashlib import md5
 import os
 import re
 import sys
+import string
+from hashlib import md5
+from urllib.parse import quote, unquote
+
 import six
-from six.moves import range
 
 
 try:
@@ -126,7 +128,7 @@ def validate_dbname(name):
     """ validate dbname """
     if name in SPECIAL_DBS:
         return True
-    elif not VALID_DB_NAME.match(six.moves.urllib.parse.unquote(name)):
+    elif not VALID_DB_NAME.match(unquote(name)):
         raise ValueError("Invalid db name: '%s'" % name)
     return True
 
@@ -241,4 +243,4 @@ def url_quote(s, safe='/:'):
         s = s.encode('utf-8')
     elif not isinstance(s, six.binary_type):
         s = six.binary_type(s)
-    return six.moves.urllib.parse.quote(s, safe=safe)
+    return quote(s, safe=safe)

@@ -34,7 +34,7 @@ from copy import deepcopy
 from itertools import groupby
 import json
 import time
-from six.moves.urllib.parse import urlparse
+from urllib.parse import unquote, urljoin, urlparse
 
 import cloudant
 from cloudant.client import CouchDB
@@ -46,8 +46,6 @@ from cloudant.security_document import SecurityDocument
 from cloudant.view import View
 from requests.exceptions import HTTPError
 import six
-from six.moves import filter
-from six.moves.urllib.parse import urljoin, unquote
 
 from couchdbkit.logging import error_logger
 from .exceptions import InvalidAttachment, NoResultFound, \

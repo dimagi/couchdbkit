@@ -20,7 +20,6 @@ BulkSaveError
 from .macros import package_shows, package_views
 from .. import utils
 import six
-from six.moves import filter
 
 if os.name == 'nt':
     def _replace_backslash(name):
