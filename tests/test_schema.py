@@ -429,7 +429,7 @@ class DocumentTestCase(unittest.TestCase):
         results3 = TestDoc.view('test/all', include_docs=True,
                                 wrapper=lambda row: row['doc']['field1'])
         self.assert_(len(results3) == 2)
-        self.assert_(isinstance(results3.first(), six.text_type) == True)
+        self.assert_(isinstance(results3.first(), str) == True)
         self.server.delete_db('couchdbkit_test')
 
     def test_wrong_doc_type(self):
@@ -902,7 +902,7 @@ class PropertyTestCase(unittest.TestCase):
 
     def testSchemaWithPythonTypes(self):
         class A(Document):
-            c = six.text_type()
+            c = str()
             i = int(4)
         a = A()
         self.assert_(a._doc == {'c': u'', 'doc_type': 'A', 'i': 4})
@@ -1059,8 +1059,8 @@ class PropertyTestCase(unittest.TestCase):
         self.assertEqual([b.slm[0].s, b.slm[1].s], [a1.s, a2.s])
         self.assertEqual(b._doc, {
             'doc_type': 'B',
-            'slm': [{'doc_type': 'A', 's': six.text_type(a1.s)},
-                    {'doc_type': 'A', 's': six.text_type(a2.s)}]
+            'slm': [{'doc_type': 'A', 's': str(a1.s)},
+                    {'doc_type': 'A', 's': str(a2.s)}]
         })
         b.slm.append(a3)
         c = b.slm[1:3]
@@ -1071,7 +1071,7 @@ class PropertyTestCase(unittest.TestCase):
         self.assertEqual(b.slm[0].s, a1.s)
         self.assertEqual(b._doc, {
             'doc_type': 'B',
-            'slm': [{'doc_type': 'A', 's': six.text_type(a1.s)}]
+            'slm': [{'doc_type': 'A', 's': str(a1.s)}]
         })
 
     def testSchemaListPropertyContains(self):
@@ -1128,8 +1128,8 @@ class PropertyTestCase(unittest.TestCase):
         self.assertEqual([b.slm[0].s, b.slm[1].s], [a1.s, a2.s])
         self.assertEqual(b._doc, {
             'doc_type': 'B',
-            'slm': [{'doc_type': 'A', 's': six.text_type(a1.s)},
-                    {'doc_type': 'A', 's': six.text_type(a2.s)}]
+            'slm': [{'doc_type': 'A', 's': str(a1.s)},
+                    {'doc_type': 'A', 's': str(a2.s)}]
         })
 
     def testSchemaListPropertyIndex(self):
@@ -1183,9 +1183,9 @@ class PropertyTestCase(unittest.TestCase):
             [b.slm[0].s, b.slm[1].s, b.slm[2].s], [a1.s, a2.s, a3.s])
         self.assertEqual(b._doc, {
             'doc_type': 'B',
-            'slm': [{'doc_type': 'A', 's': six.text_type(a1.s)},
-                    {'doc_type': 'A', 's': six.text_type(a2.s)},
-                    {'doc_type': 'A', 's': six.text_type(a3.s)}]
+            'slm': [{'doc_type': 'A', 's': str(a1.s)},
+                    {'doc_type': 'A', 's': str(a2.s)},
+                    {'doc_type': 'A', 's': str(a3.s)}]
         })
 
     def testSchemaListPropertyPop(self):
@@ -1211,8 +1211,8 @@ class PropertyTestCase(unittest.TestCase):
         self.assertEqual([b.slm[0].s, b.slm[1].s], [a1.s, a2.s])
         self.assertEqual(b._doc, {
             'doc_type': 'B',
-            'slm': [{'doc_type': 'A', 's': six.text_type(a1.s)},
-                    {'doc_type': 'A', 's': six.text_type(a2.s)}]
+            'slm': [{'doc_type': 'A', 's': str(a1.s)},
+                    {'doc_type': 'A', 's': str(a2.s)}]
         })
         v = b.slm.pop(0)
         self.assertEqual(v.s, a1.s)
@@ -1220,7 +1220,7 @@ class PropertyTestCase(unittest.TestCase):
         self.assertEqual(b.slm[0].s, a2.s)
         self.assertEqual(b._doc, {
             'doc_type': 'B',
-            'slm': [{'doc_type': 'A', 's': six.text_type(a2.s)}]
+            'slm': [{'doc_type': 'A', 's': str(a2.s)}]
         })
 
     def testSchemaListPropertyRemove(self):
@@ -1243,7 +1243,7 @@ class PropertyTestCase(unittest.TestCase):
         self.assertEqual(b.slm[0].s, a2.s)
         self.assertEqual(b._doc, {
             'doc_type': 'B',
-            'slm': [{'doc_type': 'A', 's': six.text_type(a2.s)}]
+            'slm': [{'doc_type': 'A', 's': str(a2.s)}]
         })
         with self.assertRaises(ValueError) as cm:
             b.slm.remove(a1)
@@ -1271,8 +1271,8 @@ class PropertyTestCase(unittest.TestCase):
         self.assertEqual([b.slm[0].s, b.slm[1].s], [a2.s, a1.s])
         self.assertEqual(b._doc, {
             'doc_type': 'B',
-            'slm': [{'doc_type': 'A', 's': six.text_type(a2.s)},
-                    {'doc_type': 'A', 's': six.text_type(a1.s)}]
+            'slm': [{'doc_type': 'A', 's': str(a2.s)},
+                    {'doc_type': 'A', 's': str(a1.s)}]
         })
 
     def testSchemaListPropertySort(self):
@@ -1294,15 +1294,15 @@ class PropertyTestCase(unittest.TestCase):
         self.assertEqual([b.slm[0].s, b.slm[1].s], [a1.s, a2.s])
         self.assertEqual(b._doc, {
             'doc_type': 'B',
-            'slm': [{'doc_type': 'A', 's': six.text_type(a1.s)},
-                    {'doc_type': 'A', 's': six.text_type(a2.s)}]
+            'slm': [{'doc_type': 'A', 's': str(a1.s)},
+                    {'doc_type': 'A', 's': str(a2.s)}]
         })
         b.slm.sort(key=lambda item: item['s'], reverse=True)
         self.assertEqual([b.slm[0].s, b.slm[1].s], [a2.s, a1.s])
         self.assertEqual(b._doc, {
             'doc_type': 'B',
-            'slm': [{'doc_type': 'A', 's': six.text_type(a2.s)},
-                    {'doc_type': 'A', 's': six.text_type(a1.s)}]
+            'slm': [{'doc_type': 'A', 's': str(a2.s)},
+                    {'doc_type': 'A', 's': str(a1.s)}]
         })
 
         # Only test in Python 2, since sort does not take the `cmp` kwarg in Python 3.
@@ -1311,8 +1311,8 @@ class PropertyTestCase(unittest.TestCase):
             self.assertEqual([b.slm[0].s, b.slm[1].s], [a1.s, a2.s])
             self.assertEqual(b._doc, {
                 'doc_type': 'B',
-                'slm': [{'doc_type': 'A', 's': six.text_type(a1.s)},
-                        {'doc_type': 'A', 's': six.text_type(a2.s)}]
+                'slm': [{'doc_type': 'A', 's': str(a1.s)},
+                        {'doc_type': 'A', 's': str(a2.s)}]
             })
 
     def testSchemaDictProperty(self):

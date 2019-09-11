@@ -134,7 +134,7 @@ def to_bytestring(s):
     """ convert to bytestring an unicode """
     if not isinstance(s, str):
         return s
-    if isinstance(s, six.text_type):
+    if isinstance(s, str):
         return s.encode('utf-8')
     else:
         return s
@@ -237,7 +237,7 @@ class ProxyDict(jsonobject.utils.SimpleDict):
 # From https://benoitc.github.io/restkit/api/restkit.util-pysrc.html#url_quote
 def url_quote(s, safe='/:'):
     """URL encode a single string with a given encoding."""
-    if isinstance(s, six.text_type):
+    if isinstance(s, str):
         s = s.encode('utf-8')
     elif not isinstance(s, six.binary_type):
         s = six.binary_type(s)

@@ -175,7 +175,7 @@ class Server(object):
         try:
             del self[dbname]
         except CloudantClientException as e:
-            raise ResourceNotFound(six.text_type(e))
+            raise ResourceNotFound(str(e))
 
     #TODO: maintain list of replications
     def replicate(self, source, target, **params):
@@ -402,7 +402,7 @@ class Database(object):
             wrapper = schema.wrap
         attachments = params.get('attachments', False)
 
-        if six.PY2 and isinstance(docid, six.text_type):
+        if six.PY2 and isinstance(docid, str):
             docid = docid.encode('utf-8')
         if six.PY3 and isinstance(docid, bytes):
             docid = docid.decode('utf-8')
