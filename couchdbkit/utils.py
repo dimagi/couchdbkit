@@ -132,7 +132,7 @@ def validate_dbname(name):
 
 def to_bytestring(s):
     """ convert to bytestring an unicode """
-    if not isinstance(s, six.string_types):
+    if not isinstance(s, str):
         return s
     if isinstance(s, six.text_type):
         return s.encode('utf-8')

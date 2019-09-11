@@ -673,7 +673,7 @@ class Database(object):
 
             couch_doc = Document(self.cloudant_database, doc1['_id'])
             couch_doc['_rev'] = doc1['_rev']
-        elif isinstance(doc1, six.string_types): # we get a docid
+        elif isinstance(doc1, str): # we get a docid
             couch_doc = Document(self.cloudant_database, doc1)
             couch_doc['_rev'] = self.get_rev(doc1)
 
@@ -712,7 +712,7 @@ class Database(object):
             headers = {}
 
         doc1, schema = _maybe_serialize(doc)
-        if isinstance(doc1, six.string_types):
+        if isinstance(doc1, str):
             docid = doc1
         else:
             if '_id' not in doc1:
@@ -721,7 +721,7 @@ class Database(object):
 
         if dest is None:
             destination = self.server.next_uuid(count=1)
-        elif isinstance(dest, six.string_types):
+        elif isinstance(dest, str):
             if dest in self:
                 dest = self.get(dest)
                 destination = "%s?rev=%s" % (dest['_id'], dest['_rev'])

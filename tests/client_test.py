@@ -4,7 +4,6 @@
 # See the NOTICE for more information.
 #
 from __future__ import absolute_import
-import six
 __author__ = 'benoitc@e-engura.com (Benoît Chesneau)'
 
 import unittest
@@ -76,7 +75,7 @@ class ClientServerTestCase(unittest.TestCase):
 
     def testGetUUIDS(self):
         uuid = self.Server.next_uuid()
-        self.assert_(isinstance(uuid, six.string_types) == True)
+        self.assert_(isinstance(uuid, str) == True)
         self.assert_(len(self.Server._uuids) == 999)
         uuid2 = self.Server.next_uuid()
         self.assert_(uuid != uuid2)

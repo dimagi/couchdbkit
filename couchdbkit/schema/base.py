@@ -38,7 +38,7 @@ def check_reserved_words(attr_name):
             locals())
 
 def valid_id(value):
-    if isinstance(value, six.string_types) and not value.startswith('_'):
+    if isinstance(value, str) and not value.startswith('_'):
         return value
     raise TypeError('id "%s" is invalid' % value)
 
@@ -51,7 +51,7 @@ class SchemaProperties(jsonobject.JsonObjectMeta):
             doc_type_attr = (
                 super(SchemaProperties, mcs).__new__(mcs, '', bases, {})
             )._doc_type_attr
-        if isinstance(dct.get(doc_type_attr), six.string_types):
+        if isinstance(dct.get(doc_type_attr), str):
             doc_type = dct.pop(doc_type_attr)
         else:
             doc_type = name

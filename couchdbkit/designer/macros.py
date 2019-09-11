@@ -55,7 +55,7 @@ def package_views(doc, views, app_dir, objs):
 
 def apply_lib(doc, funcs, app_dir, objs):
     for k, v in funcs.items():
-        if not isinstance(v, six.string_types):
+        if not isinstance(v, str):
             continue
         else:
             logger.debug("process function: %s" % k)

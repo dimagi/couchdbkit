@@ -6,7 +6,6 @@ from __future__ import absolute_import
 import functools
 from jsonobject.properties import *
 from jsonobject.base import DefaultProperty
-import six
 
 try:
     from collections import MutableSet, Iterable
@@ -18,8 +17,8 @@ try:
 except ImportError:
     support_setproperty = False
 
-StringListProperty = functools.partial(ListProperty, six.text_type)
-StringDictProperty = functools.partial(DictProperty, six.text_type)
+StringListProperty = functools.partial(ListProperty, str)
+StringDictProperty = functools.partial(DictProperty, str)
 
 
 class Property(DefaultProperty):

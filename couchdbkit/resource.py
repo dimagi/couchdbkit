@@ -39,7 +39,7 @@ def encode_params(params):
                 value = json.dumps(value)
             elif value is None:
                 continue
-            elif not isinstance(value, six.string_types):
+            elif not isinstance(value, str):
                 value = json.dumps(value)
             _params[name] = value
     return _params

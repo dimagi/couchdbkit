@@ -258,7 +258,7 @@ class DocumentTestCase(unittest.TestCase):
         doc1 = Test.get(doc._id)
         self.server.delete_db('couchdbkit_test')
 
-        self.assert_(isinstance(doc1.field, six.string_types))
+        self.assert_(isinstance(doc1.field, str))
         self.assert_(isinstance(doc1.field1, datetime.datetime))
         self.assert_(isinstance(doc1.field2, datetime.date))
         self.assert_(isinstance(doc1.field3, datetime.time))
@@ -755,7 +755,7 @@ class PropertyTestCase(unittest.TestCase):
         self.assert_(test._doc['field'] == "test")
         self.assert_(test._doc['field1'] == "2008-11-10T08:00:00Z")
 
-        self.assert_(isinstance(test.field, six.string_types))
+        self.assert_(isinstance(test.field, str))
         self.assert_(isinstance(test.field1, datetime.datetime))
         Test._db = self.db
         test.save()
@@ -763,7 +763,7 @@ class PropertyTestCase(unittest.TestCase):
 
         v = doc2.field
         v1 = doc2.field1
-        self.assert_(isinstance(v, six.string_types))
+        self.assert_(isinstance(v, str))
         self.assert_(isinstance(v1, datetime.datetime))
 
     def testMixDynamicProperties(self):
@@ -785,7 +785,7 @@ class PropertyTestCase(unittest.TestCase):
         vd = doc2.dynamic_field
 
         self.assert_(isinstance(v1, datetime.datetime))
-        self.assert_(isinstance(vd, six.string_types))
+        self.assert_(isinstance(vd, str))
 
     def testSchemaProperty1(self):
         class MySchema(DocumentSchema):

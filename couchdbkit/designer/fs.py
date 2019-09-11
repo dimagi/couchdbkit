@@ -586,7 +586,7 @@ def clone(db, docid, dest=None, rev=None):
                         break
 
 
-                    if isinstance(content, six.string_types):
+                    if isinstance(content, str):
                         _ref = md5(utils.to_bytestring(content)).hexdigest()
                         if objects and _ref in objects:
                             content = objects[_ref]
@@ -670,7 +670,7 @@ def clone(db, docid, dest=None, rev=None):
                         os.makedirs(filedir)
                     for field, value in six.iteritems(doc[key]):
                         fieldpath = os.path.join(filedir, field)
-                        if isinstance(value, six.string_types):
+                        if isinstance(value, str):
                             if value.startswith('base64-encoded;'):
                                 value = base64.b64decode(content[15:])
                             utils.write_content(fieldpath, value)
@@ -678,7 +678,7 @@ def clone(db, docid, dest=None, rev=None):
                             utils.write_json(fieldpath + '.json', value)
                 else:
                     value = doc[key]
-                    if not isinstance(value, six.string_types):
+                    if not isinstance(value, str):
                         value = str(value)
                     utils.write_content(filedir, value)
 
