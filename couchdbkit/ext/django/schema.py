@@ -28,8 +28,8 @@ except ImportError:
     from django.utils.text import camel_case_to_spaces as get_verbose_name
 
 from django.conf import settings
-from django.utils.translation import activate, deactivate_all, get_language, \
-string_concat
+from django.utils.text import format_lazy
+from django.utils.translation import activate, deactivate_all, get_language
 from django.utils.encoding import smart_str, force_text
 
 from couchdbkit import schema
@@ -88,13 +88,14 @@ class Options(object):
 
             # verbose_name_plural is a special case because it uses a 's'
             # by default.
-            setattr(self, 'verbose_name_plural', meta_attrs.pop('verbose_name_plural', string_concat(self.verbose_name, 's')))
+            setattr(self, 'verbose_name_plural', meta_attrs.pop(
+                'verbose_name_plural', format_lazy('{}{}', self.verbose_name, 's')))
 
             # Any leftover attributes must be invalid.
             if meta_attrs != {}:
                 raise TypeError("'class Meta' got invalid attribute(s): %s" % ','.join(list(meta_attrs.keys())))
         else:
-            self.verbose_name_plural = string_concat(self.verbose_name, 's')
+            self.verbose_name_plural = format_lazy('{}{}', self.verbose_name, 's')
         del self.meta
 
     def __str__(self):
