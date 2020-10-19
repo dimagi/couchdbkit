@@ -13,13 +13,13 @@ install:
   - python setup.py install
 
 before_script:
-  - "docker run -d --name couchdb-cluster \
-    -p 5984:5984 \
-    -v $(pwd)/data:/usr/src/couchdb/dev/lib/ \
-    klaemo/couchdb:2.0-dev \
-    --with-admin-party-please \
-    --with-haproxy
-    -n 1"
+  - >
+      docker run -d --name couchdb-cluster
+      -p 5984:5984
+      -v $(pwd)/data:/usr/src/couchdb/dev/lib/
+      --env COUCHDB_USER=commcarehq
+      --env COUCHDB_PASSWORD=commcarehq
+      docker.io/bitnami/couchdb:3.1.1
   - |
     while :
     do
