@@ -13,13 +13,7 @@ install:
   - python setup.py install
 
 before_script:
-  - >
-      docker run -d --name couchdb-cluster
-      -p 5984:5984
-      -v $(pwd)/data:/usr/src/couchdb/dev/lib/
-      -e COUCHDB_USER=commcarehq
-      -e COUCHDB_PASSWORD=commcarehq
-      docker.io/bitnami/couchdb:3.1.1
+  - docker run -d --name couchdb-cluster -p 5984:5984 -v $(pwd)/data:/usr/src/couchdb/dev/lib/ -e COUCHDB_USER=commcarehq -e COUCHDB_PASSWORD=commcarehq docker.io/bitnami/couchdb:3.1.1
   - |
     while :
     do
