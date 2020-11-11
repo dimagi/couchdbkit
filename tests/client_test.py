@@ -17,7 +17,7 @@ from couchdbkit import *
 
 class ClientServerTestCase(unittest.TestCase):
     def setUp(self):
-        self.Server = Server()
+        self.Server = Server("http://commcarehq:commcarehq@127.0.0.1:5984")
 
     def tearDown(self):
         try:
@@ -84,7 +84,7 @@ class ClientServerTestCase(unittest.TestCase):
 
 class ClientDatabaseTestCase(unittest.TestCase):
     def setUp(self):
-        self.Server = Server()
+        self.Server = Server("http://commcarehq:commcarehq@127.0.0.1:5984")
 
     def tearDown(self):
         try:
@@ -102,7 +102,7 @@ class ClientDatabaseTestCase(unittest.TestCase):
     def testDbFromUri(self):
         db = self.Server.create_db('couchdbkit_test')
 
-        db1 = Database("http://127.0.0.1:5984/couchdbkit_test")
+        db1 = Database("http://commcarehq:commcarehq@127.0.0.1:5984/couchdbkit_test")
         self.assert_(hasattr(db1, "dbname") == True)
         self.assert_(db1.dbname == "couchdbkit_test")
         info = db1.info()
@@ -535,7 +535,7 @@ class ClientDatabaseTestCase(unittest.TestCase):
 
 class ClientViewTestCase(unittest.TestCase):
     def setUp(self):
-        self.Server = Server()
+        self.Server = Server("http://commcarehq:commcarehq@127.0.0.1:5984")
 
     def tearDown(self):
         try:

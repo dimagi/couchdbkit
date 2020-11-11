@@ -21,7 +21,7 @@ if six.PY3:
 
 class DocumentTestCase(unittest.TestCase):
     def setUp(self):
-        self.server = Server()
+        self.server = Server("http://commcarehq:commcarehq@127.0.0.1:5984")
 
     def tearDown(self):
         try:
@@ -637,7 +637,7 @@ class DocumentTestCase(unittest.TestCase):
 class PropertyTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.server = Server()
+        self.server = Server("http://commcarehq:commcarehq@127.0.0.1:5984")
         try:
             self.db = self.server.create_db('couchdbkit_test')
         except:

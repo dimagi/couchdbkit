@@ -306,7 +306,8 @@ class Database(object):
         """ set database securrity object """
         with SecurityDocument(self.cloudant_database) as sec_doc:
             # context manager saves
-            for key in sec_doc:
+            keys = list(sec_doc.keys()).copy()
+            for key in keys:
                 del sec_doc[key]
             for k, v in secobj.items():
                 sec_doc[k] = v

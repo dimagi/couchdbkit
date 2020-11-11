@@ -16,7 +16,7 @@ class TestLogging(TestCase):
     @classmethod
     def setUpClass(cls):
         super(TestLogging, cls).setUpClass()
-        cls.server = Server()
+        cls.server = Server("http://commcarehq:commcarehq@127.0.0.1:5984")
         cls.db = cls.server.create_db('couchdbkit_test')
         doc = {"name": "Yesterday's Heroes"}
         cls.db.save_doc(doc)

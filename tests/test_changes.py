@@ -17,7 +17,7 @@ from couchdbkit.changes import ChangesStream, fold, foreach
 class ClientServerTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.server = Server()
+        self.server = Server("http://commcarehq:commcarehq@127.0.0.1:5984")
         self._delete_db()
         self.db = self.server.create_db("couchdbkit_test")
         self.consumer = Consumer(self.db)
