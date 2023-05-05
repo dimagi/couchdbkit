@@ -258,9 +258,10 @@ class FSDoc(object):
         return False
 
     def dir_to_fields(self, current_dir='', depth=0,
-                manifest=[]):
+                manifest=None):
         """ process a directory and get all members """
-
+        if manifest is None:
+            manifest = []
         fields={}
         if not current_dir:
             current_dir = self.docdir
