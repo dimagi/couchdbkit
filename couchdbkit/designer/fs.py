@@ -131,7 +131,7 @@ class FSDoc(object):
     def attachment_stub(self, name, filepath):
         att = {}
         with open(filepath, "rb") as f:
-            re_sp = re.compile('\s')
+            re_sp = re.compile(r'\s')
             att = {
                     "data": re_sp.sub('',base64.b64encode(f.read())),
                     "content_type": ';'.join(filter(None,
@@ -258,9 +258,10 @@ class FSDoc(object):
         return False
 
     def dir_to_fields(self, current_dir='', depth=0,
-                manifest=[]):
+                manifest=None):
         """ process a directory and get all members """
-
+        if manifest is None:
+            manifest = []
         fields={}
         if not current_dir:
             current_dir = self.docdir

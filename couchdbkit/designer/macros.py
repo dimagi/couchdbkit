@@ -91,7 +91,7 @@ def run_code_macros(f_string, app_dir):
            "Processing code: No file matching '%s'" % mo.group(2))
        return library
 
-   re_code = re.compile('(\/\/|#)\ ?!code (.*)')
+   re_code = re.compile(r'(//|#) ?!code (.*)')
    return re_code.sub(rreq, f_string)
 
 def run_json_macros(doc, f_string, app_dir):
@@ -150,7 +150,7 @@ def run_json_macros(doc, f_string, app_dir):
    def rjson2(mo):
        return '\n'.join(varstrings)
 
-   re_json = re.compile('(\/\/|#)\ ?!json (.*)')
+   re_json = re.compile(r'(//|#) ?!json (.*)')
    re_json.sub(rjson, f_string)
 
    if not included:

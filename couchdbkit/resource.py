@@ -53,7 +53,7 @@ def escape_docid(docid):
         docid = url_quote(docid, safe='')
     return docid
 
-re_sp = re.compile('\s')
+re_sp = re.compile(r'\s')
 def encode_attachments(attachments):
     for k, v in six.iteritems(attachments):
         if v.get('stub', False):

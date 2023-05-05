@@ -65,7 +65,7 @@ class Options(object):
 
     def contribute_to_class(self, cls, name):
         cls._meta = self
-        self.installed = re.sub('\.models$', '', cls.__module__) in settings.INSTALLED_APPS
+        self.installed = re.sub(r'\.models$', '', cls.__module__) in settings.INSTALLED_APPS
         # First, construct the default values for these options.
         self.object_name = cls.__name__
         self.module_name = self.object_name.lower()
