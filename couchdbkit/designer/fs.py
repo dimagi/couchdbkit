@@ -131,7 +131,7 @@ class FSDoc(object):
     def attachment_stub(self, name, filepath):
         att = {}
         with open(filepath, "rb") as f:
-            re_sp = re.compile('\s')
+            re_sp = re.compile(r'\s')
             att = {
                     "data": re_sp.sub('',base64.b64encode(f.read())),
                     "content_type": ';'.join(filter(None,
