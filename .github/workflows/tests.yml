@@ -32,12 +32,7 @@ jobs:
           klaemo/couchdb:2.0-dev \
           --with-admin-party-please --with-haproxy -n 1
       - name: wait for couch to start
-        run: |
-          while:
-          do
-            curl http://localhost:5984/${db_name} -sv 2>&1 | grep '^< HTTP/.* 200 OK' && break || continue
-            sleep 1
-          done
+        run: timeout 60s sh -c 'until curl http://localhost:5984/${db_name} -sv 2>&1 | grep "^< HTTP/.* 200 OK"; do echo "Waiting for container to be healthy..."; sleep 2; done'
       - name: run tests
         run: |
           python setup.py test
